@@ -66,50 +66,50 @@ type Stacker interface
     copy() Stacker
 } // Stacker
 
-// *----QUESTION 1----*
+// *----QUESTION 1----* //
 
 //struct used to implement the Stacker interface
-type stackSlice struct {
+type StackSlice struct {
     slice []int
     Stacker
 }
 
-func (s stackSlice) isEmpty() bool {
+func (s StackSlice) isEmpty() bool {
     if len(s.slice) == 0 {
         return true
     }
     return false
 }
 
-func (s stackSlice) size() int {
+func (s StackSlice) size() int {
     return len(s.slice)
 }
 
-func (s *stackSlice) push(x int) {
+func (s *StackSlice) push(x int) {
 	s.slice = append(s.slice,x)
 }
 
-func (s stackSlice) peek() (int,error) {
+func (s StackSlice) peek() (int,error) {
     if len(s.slice) == 0 {
         return 0, errors.New("0: The stack is empty and there are no elements to peek.")
     } else {
         topInt := s.slice[len(s.slice)-1]
-        return topInt, errors.New("1: Successfully peeked at the top integer in the stack.")
+        return topInt, nil
     }
 }
 
-func (s *stackSlice) pop() (int,error) {
+func (s *StackSlice) pop() (int,error) {
     if len(s.slice) == 0 {
         return 0, errors.New("0: Cannot remove integer element from an empty stack.")
     } else {
     	var num int
         num, s.slice = s.slice[len(s.slice)-1], s.slice[:len(s.slice)-1]
-        return num, errors.New("1: Successfully returned an integer at the top of the stack.")
+        return num, nil
     }
 }
 
-func (s stackSlice) copy() Stacker {
-    copyStack := stackSlice{}
+func (s StackSlice) copy() Stacker {
+    copyStack := StackSlice{}
     copy(copyStack.slice, s.slice)
     copyStack.slice = s.slice
     return &copyStack
@@ -117,29 +117,94 @@ func (s stackSlice) copy() Stacker {
 
 //Returns a new empty stack using an int slice representation
 func makeStackSlice() Stacker {
-    stackSlice := stackSlice{}
-    return &stackSlice
+    StackSlice := StackSlice{}
+    return &StackSlice
 }
 
-// *----END OF QUESTION 1----*
+// *----QUESTION 2----* //
+
+//Node struct required for link list implementation
+type Node struct {
+	prev *Node
+	next *Node
+	data int
+}
+
+//Used for linked list implementation of Stacker interface
+type StackLinked struct {
+	head *Node
+	tail *Node
+	length int
+	Stacker
+}
+
+func (s StackLinked) isEmpty() bool {
+	if s.length == 0 {
+		return true
+	}
+	return false
+}
+
+func (s StackLinked) size() int {
+	return s.length
+}
+
+func (s *StackLinked) push(x int) {
+	newNode := Node{s.tail,nil,x}
+	if s.length == 0 {
+		s.head = &newNode
+		s.tail = &newNode
+	} else {
+		s.tail.next = &newNode
+		s.tail = s.tail.next
+	}
+	s.length++
+}
+
+func (s StackLinked) peek() (int,error) {
+	if s.length == 0 {
+        return 0, errors.New("0: The stack is empty and there are no elements to peek.")
+    } else {
+        topInt := s.tail.data
+        return topInt, nil
+    }
+}
+
+// returns a new empty stack using a linked list representation
+func makeStackLinked() Stacker {
+   linkedStack := StackLinked{}
+   return &linkedStack
+}
+
 
 func main() {
 
-    s := makeStackSlice()
-    s.push(4)
+	// Slice tests
+    // s := makeStackSlice()
+    // s.push(4)
 
 
-    t := s.copy()
+    // t := s.copy()
 
-    nums,errs := s.pop()
-    numt,errt := t.pop()
+    // nums,errs := s.pop()
+    // numt,errt := t.pop()
 
     
-    fmt.Printf("%d\n", nums)
-    fmt.Printf("%s\n", errs)
-    fmt.Printf("%d\n", numt)
-    fmt.Printf("%s\n", errt)
+    // fmt.Printf("%d\n", nums)
+    // fmt.Printf("%s\n", errs)
+    // fmt.Printf("%d\n", numt)
+    // fmt.Printf("%s\n", errt)
 
-    fmt.Printf("%v", s.slice)
+    //Linked list tests
+
+    a := makeStackLinked()
+    a.push(5)
+    a.push(2)
+    //a.push(3)
+
+    numa,erra := a.peek()
+    fmt.Printf("%d\n", numa)
+    fmt.Printf("%s\n", erra)
+
 
 }
