@@ -66,6 +66,8 @@ type Stacker interface
     copy() Stacker
 } // Stacker
 
+// *----QUESTION 1----*
+
 //struct used to implement the Stacker interface
 type stackSlice struct {
     slice []int
@@ -83,51 +85,61 @@ func (s stackSlice) size() int {
     return len(s.slice)
 }
 
-func (s stackSlice) push(x int) {
-    fmt.Printf("%d\n", cap(s.slice))
-    s.slice = append(s.slice,x)
+func (s *stackSlice) push(x int) {
+	s.slice = append(s.slice,x)
 }
 
 func (s stackSlice) peek() (int,error) {
     if len(s.slice) == 0 {
-        return 1, errors.New("0: The stack is empty and there are no elements to peek.")
+        return 0, errors.New("0: The stack is empty and there are no elements to peek.")
     } else {
         topInt := s.slice[len(s.slice)-1]
         return topInt, errors.New("1: Successfully peeked at the top integer in the stack.")
     }
 }
 
-func (s stackSlice) pop() (int,error) {
+func (s *stackSlice) pop() (int,error) {
     if len(s.slice) == 0 {
-        return 1, errors.New("0: Cannot remove integer element from an empty stack.")
+        return 0, errors.New("0: Cannot remove integer element from an empty stack.")
     } else {
-        s.slice = s.slice[:len(s.slice)-1]
-        return s.slice[len(s.slice)-1], errors.New("1: Successfully returned an integer at the top of the stack.")
+    	var num int
+        num, s.slice = s.slice[len(s.slice)-1], s.slice[:len(s.slice)-1]
+        return num, errors.New("1: Successfully returned an integer at the top of the stack.")
     }
 }
 
-// Copy function???
 func (s stackSlice) copy() Stacker {
-    copyStack := makeStackSlice()
+    copyStack := stackSlice{}
+    copy(copyStack.slice, s.slice)
     copyStack.slice = s.slice
-    return copyStack
+    return &copyStack
 }
 
-//returns a new empty stack using an int slice representation
+//Returns a new empty stack using an int slice representation
 func makeStackSlice() Stacker {
     stackSlice := stackSlice{}
-    return stackSlice
+    return &stackSlice
 }
+
+// *----END OF QUESTION 1----*
 
 func main() {
 
     s := makeStackSlice()
     s.push(4)
-    size := s.size()
-    num,err := s.peek()
 
-    fmt.Printf("%d\n", size)
-    fmt.Printf("%d\n", num)
-    fmt.Printf("%s\n", err)
+
+    t := s.copy()
+
+    nums,errs := s.pop()
+    numt,errt := t.pop()
+
+    
+    fmt.Printf("%d\n", nums)
+    fmt.Printf("%s\n", errs)
+    fmt.Printf("%d\n", numt)
+    fmt.Printf("%s\n", errt)
+
+    fmt.Printf("%v", s.slice)
 
 }
