@@ -91,7 +91,7 @@ func (s *StackSlice) push(x int) {
 
 func (s StackSlice) peek() (int,error) {
     if len(s.slice) == 0 {
-        return 0, errors.New("0: The stack is empty and there are no elements to peek.")
+        return 0, errors.New("The stack is empty and there are no elements to peek.")
     } else {
         topInt := s.slice[len(s.slice)-1]
         return topInt, nil
@@ -100,7 +100,7 @@ func (s StackSlice) peek() (int,error) {
 
 func (s *StackSlice) pop() (int,error) {
     if len(s.slice) == 0 {
-        return 0, errors.New("0: Cannot remove integer element from an empty stack.")
+        return 0, errors.New("Cannot pop from an empty stack.")
     } else {
     	var num int
         num, s.slice = s.slice[len(s.slice)-1], s.slice[:len(s.slice)-1]
@@ -157,17 +157,51 @@ func (s *StackLinked) push(x int) {
 	} else {
 		s.tail.next = &newNode
 		s.tail = s.tail.next
+		s.tail.next = nil
 	}
 	s.length++
 }
 
 func (s StackLinked) peek() (int,error) {
 	if s.length == 0 {
-        return 0, errors.New("0: The stack is empty and there are no elements to peek.")
+        return 0, errors.New("The stack is empty and there are no elements to peek.")
     } else {
         topInt := s.tail.data
         return topInt, nil
     }
+}
+
+func (s StackLinked) pop() (int,error) {
+	if s.length == 0 {
+		return 0, errors.New("Cannot pop from an empty stack.")
+	} else {
+		topInt := s.tail.data
+		s.tail = s.tail.prev
+		s.tail.next = nil
+		return topInt, nil
+	}
+}
+
+func (s StackLinked) copy () Stacker {
+	if s.head == nil {
+		return nil
+	} else {
+		current := s.head
+		copyStack := StackLinked{}
+		copyHead := Node{nil,nil,current.data}
+		copyStack.head = &copyHead
+		current = current.next
+		
+		for current != nil {
+			nodeCopy := Node{current.next,current.prev,current.data}
+			copyStack.tail = &nodeCopy
+			copyStack.tail = copyStack.tail.next
+			copyStack.length++
+
+			current = current.next
+		}
+		return &copyStack
+	}
 }
 
 // returns a new empty stack using a linked list representation
@@ -175,6 +209,8 @@ func makeStackLinked() Stacker {
    linkedStack := StackLinked{}
    return &linkedStack
 }
+
+// *----QUESTION 3----* //
 
 
 func main() {
@@ -200,11 +236,11 @@ func main() {
     a := makeStackLinked()
     a.push(5)
     a.push(2)
-    //a.push(3)
+    a.push(3)
 
     numa,erra := a.peek()
     fmt.Printf("%d\n", numa)
-    fmt.Printf("%s\n", erra)
+    fmt.Printf("%v\n", erra)
 
 
 }
