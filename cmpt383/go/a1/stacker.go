@@ -1,4 +1,5 @@
 package main
+
 import "fmt"
 import "errors"
 
@@ -212,6 +213,21 @@ func makeStackLinked() Stacker {
 
 // *----QUESTION 3----* //
 
+func (s StackSlice) String() string {
+	return fmt.Sprintf("%v",s.slice)
+}
+
+func (s StackLinked) String() string {
+	current := s.head
+	str := ""
+	for current != nil {
+		str += fmt.Sprintf("%d->",current.data)
+		current = current.next
+	}
+	str = str[:len(str)-2] // Cuts off the last -> in printing out the linked list
+	return str
+}
+
 
 func main() {
 
@@ -238,9 +254,14 @@ func main() {
     a.push(2)
     a.push(3)
 
-    numa,erra := a.peek()
-    fmt.Printf("%d\n", numa)
-    fmt.Printf("%v\n", erra)
+    fmt.Println(a)
+
+    b := a.copy()
+
+    fmt.Println(b)
+    //numa,erra := a.peek()
+    //fmt.Printf("%d\n", numa)
+    //fmt.Printf("%v\n", erra)
 
 
 }
