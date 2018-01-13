@@ -258,10 +258,10 @@ func stackerTest(s Stacker) {
     }
 
     //POP TEST
-    for i := 0; i < stackSize; i++ {
-    	fmt.Println(s)
-    	s.pop()
-    }
+    // for i := 0; i < stackSize; i++ {
+    // 	fmt.Println(s)
+    // 	s.pop()
+    // }
 
     fmt.Println(s)
 
@@ -272,16 +272,16 @@ func stackerTest(s Stacker) {
 
     //POP TEST
 
-    //fmt.Println("s and t are equal:", stackEquals(s,t))
+    fmt.Println("s and t are equal:", stackEquals(s,t))
 
-    //fmt.Println("Initial stack s:",s)
-    //fmt.Println("Copied stack t:",t)
+    fmt.Println("Initial stack s:",s)
+    fmt.Println("Copied stack t:",t)
     
     //POPALL TESTS
-    //popAll(t)
-    //popAll(s)
-    //fmt.Println("Stack after popAll:",s)
-    //fmt.Println("Copied stack after popAll:",t)
+    popAll(t)
+    popAll(s)
+    fmt.Println("Stack after popAll:",s)
+    fmt.Println("Copied stack after popAll:",t)
    
 }
 
