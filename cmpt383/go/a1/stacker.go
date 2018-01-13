@@ -191,12 +191,14 @@ func (s StackLinked) copy () Stacker {
 		copyStack := StackLinked{}
 		copyHead := Node{nil,nil,current.data}
 		copyStack.head = &copyHead
+		copyStack.tail = &copyHead
 		current = current.next
 		
 		for current != nil {
 			nodeCopy := Node{current.next,current.prev,current.data}
-			copyStack.tail = &nodeCopy
+			copyStack.tail.next = &nodeCopy
 			copyStack.tail = copyStack.tail.next
+			copyStack.tail.next = nil
 			copyStack.length++
 
 			current = current.next
