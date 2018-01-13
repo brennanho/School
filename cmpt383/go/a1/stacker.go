@@ -192,7 +192,7 @@ func (s *StackLinked) pop() (int,error) {
 }
 
 func (s StackLinked) copy () Stacker {
-	if s.head == nil {
+	if s.length == 0 {
 		return nil
 	} else {
 		current := s.head
@@ -255,33 +255,40 @@ func stackerTest(s Stacker) {
 	//PUSH TEST
     for i := 0; i < stackSize; i++ {
     	s.push(i+1)
+    	fmt.Println("Pushing numbers... ", s, "     Size =",s.size()) // SIZE TEST
     }
 
-    //POP TEST
-    // for i := 0; i < stackSize; i++ {
-    // 	fmt.Println(s)
-    // 	s.pop()
-    // }
-
-    fmt.Println(s)
+    //IS EMPTY TEST 1
+    isEmpty := s.isEmpty()
+    fmt.Println("Stack is empty:",isEmpty)
 
     // COPY TEST
     t := s.copy()
-    fmt.Println("Initial stack s:",s)
-    fmt.Println("Copied stack t:",t)
+    fmt.Println("s (orig):",s)
+    fmt.Println("t (copy):",t)
 
-    //POP TEST
-
+    // TEST IS EQEUAL
     fmt.Println("s and t are equal:", stackEquals(s,t))
 
-    fmt.Println("Initial stack s:",s)
-    fmt.Println("Copied stack t:",t)
-    
+    //PEEK TEST
+    num,err := s.peek()
+    fmt.Println("Peek top:",num, ", error:",err)
+
+    //POP TEST
+    for i := 0; i < stackSize; i++ {
+    	s.pop()
+    	fmt.Println("Popping numbers... ", s, "     Size =",s.size()) // SIZE TEST 
+    }
+
     //POPALL TESTS
     popAll(t)
     popAll(s)
     fmt.Println("Stack after popAll:",s)
     fmt.Println("Copied stack after popAll:",t)
+
+    //IS EMPTY TEST 2
+    isEmpty = s.isEmpty()
+    fmt.Println("Stack is empty:",isEmpty)
    
 }
 
@@ -323,7 +330,9 @@ func popAll(s Stacker) {
 func stackEquals(s, t Stacker) bool {
    	if s.size() != t.size() {
    		return false
-   	} else { // Create the 2 temp stacks for s and t so they can be used to fill in once elements have been popped
+	} else if s.isEmpty() && t.isEmpty() {
+		return true
+	} else { // Create the 2 temp stacks for s and t so they can be used to fill in once elements have been popped
 
    		sTemp := makeStackSlice()
    		tTemp := makeStackSlice()
@@ -335,15 +344,12 @@ func stackEquals(s, t Stacker) bool {
    			sTemp.push(nums)
    			tTemp.push(numt)
 
-   			fmt.Println("nums: ",nums)
-   			fmt.Println("numt: ",numt)
-   			// if nums != numt {
-   			// 	return false
-   			// }
+   	
+   		
+   			if nums != numt {
+   				return false
+   			}
    		}
-
-   		fmt.Println(sTemp)
-   		fmt.Println(tTemp)
 
    		for sTemp.size() > 0 { // Restacking original stacks s and t
 
