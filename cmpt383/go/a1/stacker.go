@@ -172,13 +172,21 @@ func (s StackLinked) peek() (int,error) {
     }
 }
 
-func (s StackLinked) pop() (int,error) {
+func (s *StackLinked) pop() (int,error) {
 	if s.length == 0 {
 		return 0, errors.New("Cannot pop from an empty stack.")
+	} else if s.length == 1 {
+		topInt := s.tail.data
+		s.head = nil
+		s.tail = s.head
+		s.length--
+		return topInt, nil
 	} else {
+		//fmt.Println(s.tail)
 		topInt := s.tail.data
 		s.tail = s.tail.prev
 		s.tail.next = nil
+		s.length--
 		return topInt, nil
 	}
 }
@@ -193,11 +201,14 @@ func (s StackLinked) copy () Stacker {
 		copyStack.head = &copyHead
 		copyStack.tail = &copyHead
 		current = current.next
+		copyStack.length++
 		
-		for current != nil {
+		for current != nil { //Copy elements in stack after head
 			nodeCopy := Node{current.next,current.prev,current.data}
 			copyStack.tail.next = &nodeCopy
+			temp := copyStack.tail
 			copyStack.tail = copyStack.tail.next
+			copyStack.tail.prev = temp
 			copyStack.tail.next = nil
 			copyStack.length++
 
@@ -225,45 +236,136 @@ func (s StackLinked) String() string {
 	for current != nil {
 		str += fmt.Sprintf("%d->",current.data)
 		current = current.next
-	}
-	str = str[:len(str)-2] // Cuts off the last -> in printing out the linked list
+	} // for
+	if len(str) > 0 {
+		str = str[:len(str)-2] // Cuts off the last -> in printing out the linked list
+	} else {
+		str = "[]"
+	}	
 	return str
+}
+
+// *----QUESTION 4----* //
+
+// s is assumed to be empty
+func stackerTest(s Stacker) {
+
+	stackSize := 10
+
+	//PUSH TEST
+    for i := 0; i < stackSize; i++ {
+    	s.push(i+1)
+    }
+
+    //POP TEST
+    for i := 0; i < stackSize; i++ {
+    	fmt.Println(s)
+    	s.pop()
+    }
+
+    fmt.Println(s)
+
+    // COPY TEST
+    t := s.copy()
+    fmt.Println("Initial stack s:",s)
+    fmt.Println("Copied stack t:",t)
+
+    //POP TEST
+
+    //fmt.Println("s and t are equal:", stackEquals(s,t))
+
+    //fmt.Println("Initial stack s:",s)
+    //fmt.Println("Copied stack t:",t)
+    
+    //POPALL TESTS
+    //popAll(t)
+    //popAll(s)
+    //fmt.Println("Stack after popAll:",s)
+    //fmt.Println("Copied stack after popAll:",t)
+   
+}
+
+func stackSliceTest() {
+    s := makeStackSlice()
+    stackerTest(s)
+    fmt.Println("all StackSlice tests passed")
+}
+
+func stackLinkedTest() {
+    s := makeStackLinked()
+    stackerTest(s)
+    fmt.Println("all StackLinked tests passed")
+}
+
+// *----QUESTION 5----* //
+
+// Pre-condition:
+//    none
+// Post-condition:
+//    s.isEmpty()
+func popAll(s Stacker) {
+	for s.size() > 0 {
+		s.pop()
+	}
+	//for
+}
+
+//*----QUESTION 6----* //
+
+// Pre-condition:
+//    none
+// Post-condition:
+//    returns true if s and t have the same elements in the same order;
+//    both s and t have the same value after calling stackEquals as before
+// Annoying constraint:
+//    Use only Stackers in the body of this functions: don't use arrays,
+//    slices, or any container other than a Stacker.
+func stackEquals(s, t Stacker) bool {
+   	if s.size() != t.size() {
+   		return false
+   	} else { // Create the 2 temp stacks for s and t so they can be used to fill in once elements have been popped
+
+   		sTemp := makeStackSlice()
+   		tTemp := makeStackSlice()
+   		for s.size() > 0 {
+
+   			nums, _ := s.pop()
+   			numt, _ := t.pop()
+
+   			sTemp.push(nums)
+   			tTemp.push(numt)
+
+   			fmt.Println("nums: ",nums)
+   			fmt.Println("numt: ",numt)
+   			// if nums != numt {
+   			// 	return false
+   			// }
+   		}
+
+   		fmt.Println(sTemp)
+   		fmt.Println(tTemp)
+
+   		for sTemp.size() > 0 { // Restacking original stacks s and t
+
+   			numsTemp, _ := sTemp.pop()
+   			numtTemp, _ := tTemp.pop()
+
+   			s.push(numsTemp)
+   			t.push(numtTemp)
+
+   		}
+   		return true
+   	}
 }
 
 
 func main() {
 
-	// Slice tests
-    // s := makeStackSlice()
-    // s.push(4)
+	stackSliceTest()
 
+	fmt.Println("----------------------------------")
 
-    // t := s.copy()
-
-    // nums,errs := s.pop()
-    // numt,errt := t.pop()
-
-    
-    // fmt.Printf("%d\n", nums)
-    // fmt.Printf("%s\n", errs)
-    // fmt.Printf("%d\n", numt)
-    // fmt.Printf("%s\n", errt)
-
-    //Linked list tests
-
-    a := makeStackLinked()
-    a.push(5)
-    a.push(2)
-    a.push(3)
-
-    fmt.Println(a)
-
-    b := a.copy()
-
-    fmt.Println(b)
-    //numa,erra := a.peek()
-    //fmt.Printf("%d\n", numa)
-    //fmt.Printf("%v\n", erra)
+	stackLinkedTest()
 
 
 }
