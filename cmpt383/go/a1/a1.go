@@ -1,4 +1,4 @@
-package main
+package a1
 
 import "fmt"
 import "errors"
@@ -193,7 +193,8 @@ func (s *StackLinked) pop() (int,error) {
 
 func (s StackLinked) copy () Stacker {
 	if s.length == 0 {
-		return nil
+        copyStack := StackLinked{}
+		return &copyStack
 	} else {
 		current := s.head
 		copyStack := StackLinked{}
@@ -243,65 +244,6 @@ func (s StackLinked) String() string {
 		str = "[]"
 	}	
 	return str
-}
-
-// *----QUESTION 4----* //
-
-// s is assumed to be empty
-func stackerTest(s Stacker) {
-
-	stackSize := 10
-
-	//PUSH TEST
-    for i := 0; i < stackSize; i++ {
-    	s.push(i+1)
-    	fmt.Println("Pushing numbers... ", s, "     Size =",s.size()) // SIZE TEST
-    }
-
-    //IS EMPTY TEST 1
-    isEmpty := s.isEmpty()
-    fmt.Println("Stack is empty:",isEmpty)
-
-    // COPY TEST
-    t := s.copy()
-    fmt.Println("s (orig):",s)
-    fmt.Println("t (copy):",t)
-
-    // TEST IS EQEUAL
-    fmt.Println("s and t are equal:", stackEquals(s,t))
-
-    //PEEK TEST
-    num,err := s.peek()
-    fmt.Println("Peek top:",num, ", error:",err)
-
-    //POP TEST
-    for i := 0; i < stackSize; i++ {
-    	s.pop()
-    	fmt.Println("Popping numbers... ", s, "     Size =",s.size()) // SIZE TEST 
-    }
-
-    //POPALL TESTS
-    popAll(t)
-    popAll(s)
-    fmt.Println("Stack after popAll:",s)
-    fmt.Println("Copied stack after popAll:",t)
-
-    //IS EMPTY TEST 2
-    isEmpty = s.isEmpty()
-    fmt.Println("Stack is empty:",isEmpty)
-   
-}
-
-func stackSliceTest() {
-    s := makeStackSlice()
-    stackerTest(s)
-    fmt.Println("all StackSlice tests passed")
-}
-
-func stackLinkedTest() {
-    s := makeStackLinked()
-    stackerTest(s)
-    fmt.Println("all StackLinked tests passed")
 }
 
 // *----QUESTION 5----* //
@@ -362,16 +304,4 @@ func stackEquals(s, t Stacker) bool {
    		}
    		return true
    	}
-}
-
-
-func main() {
-
-	stackSliceTest()
-
-	fmt.Println("----------------------------------")
-
-	stackLinkedTest()
-
-
 }
