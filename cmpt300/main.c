@@ -2,41 +2,43 @@
 #include <stdlib.h>
 #include "list.c"
 
-void printList(LIST* list) {
-	printf("[ ");
-	for (int i = 0; i < list->size; i++){
-		printf("%d,",*(int*)list->arr[i]->item);
+//Pulling from declaration in list.c
+extern Node* heads[10];
+extern Node* nodes[100];
+
+//For printing out the static nodes array and heads array
+void printResources(Node* arr[], int len) {
+	printf("[");
+	for (int i = 0; i < len-1; i++) {
+		printf("%d,",arr[i]->inUse);
 	}
-	printf("]\n");
+		printf("%d]\n",arr[len-1]->inUse);
 }
 
 int main(void) {
 
-	int data = 10;
+	//Initialize pool of heads
+	for (int i = 0; i < 10; i++) {
+		Node* newHead = malloc(sizeof* newHead);
+		newHead->inUse = 0;
+		heads[i] = newHead;
+	}		
+
+	//Initialize pool of nodes
+	for (int i = 0; i < 100; i++) {
+		Node* newNode = malloc(sizeof* newNode);
+		newNode->inUse = 0;
+		nodes[i] = newNode;
+	}
+
 	LIST* myList = ListCreate();
-	printf("myList size = %d\n",ListCount(myList));
+	LIST* myList2 = ListCreate();
 
-	void* first = ListFirst(myList);
-	void* last = ListLast(myList);
-	void* nextItem = ListNext(myList);
-	void* prevItem = ListPrev(myList);
-	void* currPtr = ListCurr(myList);
+	printResources(heads,10);
+	//printResources(nodes,100);
 
-	printf("first item = %d\n", (void*)first);
-	printf("last item = %d\n", (void*)last);
-	printf("next item = %d\n", (void*)nextItem);
-	printf("prev item = %d\n", (void*)prevItem);
-	printf("current ptr = %d\n", (void*)currPtr);
-
-	void* item;
-	int a = 5;
-	item = &a;
-	
-	int resultAdd = ListAdd(myList,item);
-	resultAdd = ListAdd(myList,item);
-	resultAdd = ListAdd(myList,item);
-	resultAdd = ListAdd(myList,item);
-
-	printList(myList);
+	printf("List count = %d\n",ListCount(myList));
+	printf("List first = %d\n",*(int*)ListFirst(myList));
+	printf("List last = %d\n",*(int*)ListLast(myList));
 
 }

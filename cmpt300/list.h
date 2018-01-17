@@ -1,13 +1,16 @@
 //Node container with a type "data" item
 typedef struct Node {
 	void * item;
-} Node;
+	struct Node* next;
+	struct Node* prev;
+	int inUse; // inUse = 0 (false), inUse = 1 (true)
+} Node ;
 
 //List with "size" elements of type Node
 typedef struct LIST {
-	Node* arr[10];
 	void * currItem;
-	int currIndex;
+	Node* first;
+	Node* last;
 	int size;
 } LIST;
 
@@ -39,4 +42,3 @@ void *ListCurr(LIST* list);
 //if the current pointer is beyond the end of the list, the item is added at the end.
 //returns 0 on success, -1 on failure.
 int ListAdd(LIST* list,void* item);
-
