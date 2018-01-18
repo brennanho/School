@@ -36,15 +36,11 @@ int main(void) {
 	char* resourceHeads = "H";
 	char* resourceNodes = "N";
 
-	void* item;
-	int k = 62;
-	item = &k;
-	int firstAddTest = ListAdd(myList,item);
-
 	printf("List count = %d\n",ListCount(myList));
 	
 	for (int i = 1; i < 5; i++) {
-		item = &i;
+		int* item = malloc(sizeof* item);
+		*item = i;
 		int addResult = ListAdd(myList,item);
 	}
 
