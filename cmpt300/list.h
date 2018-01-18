@@ -3,12 +3,16 @@ typedef struct Node {
 	void * item;
 	struct Node* next;
 	struct Node* prev;
-	int inUse; // inUse = 0 (false), inUse = 1 (true)
-} Node ;
+} Node;
+
+typedef struct Head {
+	struct Node* first;
+} Head;
 
 //List with "size" elements of type Node
 typedef struct LIST {
-	void * currItem;
+	Node * curr;
+	Head* head; // Pointer to the first item in the list
 	Node* first;
 	Node* last;
 	int size;
