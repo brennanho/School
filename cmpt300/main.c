@@ -32,34 +32,51 @@ int main(void) {
 
 	LIST* myList = ListCreate();
 	LIST* myList2 = ListCreate();
-
-	char* resourceHeads = "H";
-	char* resourceNodes = "N";
 	
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 5; i++) {
 		int* item = malloc(sizeof* item);
 		*item = i;
 		int preResult = ListPrepend(myList,item);
-		int appResult = ListAppend(myList,item);
-		printf("preResult = %d, appResult = %d\n",preResult,appResult);
+		// int appResult = ListAppend(myList,item);
+		// printf("preResult = %d, appResult = %d\n",preResult,appResult);
 	}
 
-	Node* firstItem = ListFirst(myList);
-	Node* lastItem = ListLast(myList);
-	Node* listNext = ListNext(myList);
-	Node* listPrev = ListPrev(myList);
+	printf("List curr = %d\n",*(int*)myList->curr->item);
+
+
+	for (int i = 0; i < 2; i++) {
+		Node* listNext = ListNext(myList);
+	}
+	PrintList(myList);
+	int i = 99;
+	int* item = malloc(sizeof* item);
+	*item = i;
+
+	int insert = ListAdd(myList,item);
+
+	// for (int i = 0; i < 5; i++) {
+	// 	Node* listPrev = ListPrev(myList);
+	// 	printf("%d,",myList->outOfBounds);
+	// }
+
+	//Node* firstItem = ListFirst(myList);
+	//Node* lastItem = ListLast(myList);
+	//Node* listNext = ListNext(myList);
+	//Node* listPrev = ListPrev(myList);
 	//listNext = ListNext(myList);
 	int size = ListCount(myList);
 
 	PrintList(myList);
-	printf("\nList first = %d\n",*(int*)(firstItem->item));
-	printf("List last = %d\n",*(int*)(lastItem->item));
+	//printf("\nList first = %d\n",*(int*)(firstItem->item));
+	//printf("List last = %d\n",*(int*)(lastItem->item));
 	printf("List curr = %d\n",*(int*)myList->curr->item);
 	//printf("List next = %d\n",*(int*)(listNext->item));
 	//printf("List curr = %d\n",myList->curr->next);
 
 	printf("List size = %d\n",size);
 
+	//char* resourceHeads = "H";
+	//char* resourceNodes = "N";
 	// printResources(heads,10,resourceHeads);
 	// printResources(nodes,10,resourceNodes);
 
