@@ -16,6 +16,7 @@ typedef struct LIST {
 	Node* first;
 	Node* last;
 	int size;
+	int outOfBounds; // current pointer: 0 -> in bounds, -1 -> before the start of the list, 1 -> after the end of the list
 } LIST;
 
 //makes a new, empty list, and returns its reference on success. Returns a NULL pointer on failure.
@@ -23,6 +24,8 @@ LIST* ListCreate();
 
 //Helper function used to add an item to an empty list
 void AddEmpty(LIST* list, void* item);
+
+void UpdateLast(LIST* list);
 
 //returns the number of items in list
 int ListCount(LIST* list);
