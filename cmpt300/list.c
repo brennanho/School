@@ -1,17 +1,15 @@
 #include "list.h"
 
-Head* heads[10];
+LIST* heads[10];
 Node* nodes[10];
 int headsIndex = 0; // Keeps track of how many list heads are in use
 int nodesIndex = 0; // Keeps track of how many list nodes are in use
 
 LIST* ListCreate() {
 	if (headsIndex < 10) {
-		LIST* newList = malloc(sizeof *newList);
+		LIST* newList = heads[headsIndex++];
 		newList->size = 0; // Refers to number of elements in the list
 		newList->outOfBounds = 0;
-		newList->head = heads[headsIndex++];
-		newList->head->first = newList->first; //Make the head point to the first item node in the list
 		newList->first = NULL;
 		newList->last = NULL;
 		newList->curr = NULL;
@@ -42,7 +40,7 @@ void AddToEmptyList(LIST* list, void* item) {
 	list->first->item = item;
 	list->last->item = item;
 	list->curr->item = item;
-	list->head->first = list->first;
+	list->size++;
 }
 
 //Updates the tail/last node to the end of the list
@@ -109,30 +107,27 @@ void *ListCurr(LIST* list) {
 
 int ListAdd(LIST* list,void* item) {
 	if (nodesIndex < 10) {
-		if (list->size == 0) {
+		if (list->size == 0) 
 			AddToEmptyList(list,item);
-		} else if (list->curr != NULL) {
+		else if (list->outOfBounds > 0 || list->last == list->curr) //Beyond the start of the list
+			ListAppend(list,item);
+		else if (list->outOfBounds < 0 || list->curr == NULL) //Beyond the start of the list
+			ListPrepend(list,item);
+		else if (list->curr != NULL) {
 			Node* newNode = nodes[nodesIndex++];
-			Node* newPrev = list->curr;
-			Node* newNext = list->curr->next;
-
 			newNode->item = item;
-			newNode->prev = list->curr->prev;
-			newNode->next = list->curr;
-			newPrev->next = newNode;
-			newNext->prev = newNode;
+			
+			list->curr->next->prev = newNode;
+			newNode->next = list->curr->next;
+
+			list->curr->next = newNode;
+			newNode->prev = list->curr;
 
 			list->curr = newNode;
-			list->curr->prev = newPrev;
-			list->curr->next = newNext;
 
 			list->size++;
-		} else if (list->outOfBounds < 0) //Beyond the start of the list
-			ListPrepend(list,item);
-		  else if (list->outOfBounds > 0) //Beyond the end of the list
-		  	ListAppend(list,item);
+		} 
 
-		list->size++;
 		return 0;
 	}
  	return -1;
@@ -140,30 +135,27 @@ int ListAdd(LIST* list,void* item) {
 
 int ListInsert(LIST* list,void* item) {
 	if (nodesIndex < 10) {
-		if (list->size == 0) {
+		if (list->size == 0) 
 			AddToEmptyList(list,item);
-		} else if (list->curr != NULL) {
+		else if (list->outOfBounds < 0 || list->first == list->curr) //Beyond the start of the list
+			ListPrepend(list,item);
+		else if (list->outOfBounds > 0 || list->curr == NULL) //Beyond the start of the list
+			ListAppend(list,item);
+		else if (list->curr != NULL) {
 			Node* newNode = nodes[nodesIndex++];
-			Node* newPrev = list->curr->prev;
-			Node* newNext = list->curr;
-
 			newNode->item = item;
+
+			list->curr->prev->next = newNode;
 			newNode->prev = list->curr->prev;
+
 			newNode->next = list->curr;
-			newPrev->next = newNode;
-			newNext->prev = newNode;
+			list->curr->prev = newNode;
 
 			list->curr = newNode;
-			list->curr->prev = newPrev;
-			list->curr->next = newNext;
 
 			list->size++;
-		} else if (list->outOfBounds < 0) //Beyond the start of the list
-			ListPrepend(list,item);
-		  else if (list->outOfBounds > 0) //Beyond the end of the list
-		  	ListAppend(list,item);
 
-		list->size++;
+		}
 		return 0;
 	}
  	return -1;
@@ -183,9 +175,9 @@ int ListAppend(LIST* list,void* item) {
 			list->curr = list->last;
 			if (list->outOfBounds > 0)
 				list->outOfBounds--;
-
+			list->size++;
 		}
-		list->size++;
+		
 		return 0;
 	}
 	return -1;
@@ -193,9 +185,9 @@ int ListAppend(LIST* list,void* item) {
 
 int ListPrepend(LIST* list, void* item) {
 	if (nodesIndex < 10) {
-		if (list->size == 0) {
+		if (list->size == 0) 
 			AddToEmptyList(list,item);
-		} else {
+		else {
 			Node* firstPrev = list->first;
 			list->first->prev = nodes[nodesIndex++];
 			list->first = list->first->prev;
@@ -203,12 +195,11 @@ int ListPrepend(LIST* list, void* item) {
 			list->first->prev = NULL;
 			list->first->item = item; 
 			list->curr = list->first;
-			list->head->first = list->first;
 
 			if (list->outOfBounds < 0)
 				list->outOfBounds++;
+			list->size++;
 		}
-		list->size++;
 		return 0;
 	}
 	return -1;

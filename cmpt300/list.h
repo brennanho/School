@@ -5,14 +5,9 @@ typedef struct Node {
 	struct Node* prev;
 } Node;
 
-typedef struct Head {
-	struct Node* first;
-} Head;
-
 //List with "size" elements of type Node
 typedef struct LIST {
 	Node * curr;
-	Head* head; // Pointer to the first item in the list
 	Node* first;
 	Node* last;
 	int size;
