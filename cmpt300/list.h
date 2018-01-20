@@ -20,8 +20,6 @@ LIST* ListCreate();
 //Helper function used to add an item to an empty list
 void AddEmpty(LIST* list, void* item);
 
-void UpdateLast(LIST* list);
-
 //returns the number of items in list
 int ListCount(LIST* list);
 

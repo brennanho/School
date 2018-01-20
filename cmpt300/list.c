@@ -23,34 +23,29 @@ LIST* ListCreate() {
 // Print content of list (set to int right now)
 void PrintList(LIST* list) {
 	Node* currNode = list->first;
-	while (currNode != NULL) {
-		printf("%d->",*(int*)currNode->item);
+	while (currNode->next != NULL) {
+		if (currNode == list->curr)
+			printf("%d(curr)->",*(int*)currNode->item);
+		else
+			printf("%d->",*(int*)currNode->item);
 		currNode = currNode->next;
 	}
-	printf("\n");
+	if (currNode == list->curr)
+		printf("%d(curr)\n",*(int*)currNode->item);
+	else
+		printf("%d\n",*(int*)currNode->item);
 }
 
 // Adds the first node into the list
+// This is only called by the other "adding to list" functions when the list is empty
 void AddToEmptyList(LIST* list, void* item) {
 	list->first = nodes[nodesIndex++];
+	list->first->item = item;
 	list->first->next = NULL;
 	list->first->prev = NULL;
 	list->last = list->first;
 	list->curr = list->first;
-	list->first->item = item;
-	list->last->item = item;
-	list->curr->item = item;
 	list->size++;
-}
-
-//Updates the tail/last node to the end of the list
-void UpdateLast(LIST* list) {
-	Node* curr = list->first;
-	while (curr->next != NULL) {
-		curr = curr->next;
-	}
-	list->last = curr;
-	list->last->item = curr->item;
 }
 
 //*----End of Helper Functions----*//
@@ -84,6 +79,7 @@ void* ListNext(LIST* list) {
 	}
 	return NULL;
 }
+
 void *ListPrev(LIST* list) {
 	if (list->curr != NULL) {
 		list->curr = list->curr->prev;
@@ -109,11 +105,11 @@ int ListAdd(LIST* list,void* item) {
 	if (nodesIndex < 10) {
 		if (list->size == 0) 
 			AddToEmptyList(list,item);
-		else if (list->outOfBounds > 0 || list->last == list->curr) //Beyond the start of the list
+		else if (list->outOfBounds > 0 || list->last == list->curr) //current pointer is the last item in the list
 			ListAppend(list,item);
-		else if (list->outOfBounds < 0 || list->curr == NULL) //Beyond the start of the list
+		else if (list->outOfBounds < 0 || list->curr == NULL) //current pointer is beyond the start of the list
 			ListPrepend(list,item);
-		else if (list->curr != NULL) {
+		else if (list->curr != NULL) { //current pointer is contained within the list
 			Node* newNode = nodes[nodesIndex++];
 			newNode->item = item;
 			
@@ -124,7 +120,6 @@ int ListAdd(LIST* list,void* item) {
 			newNode->prev = list->curr;
 
 			list->curr = newNode;
-
 			list->size++;
 		} 
 
@@ -137,11 +132,11 @@ int ListInsert(LIST* list,void* item) {
 	if (nodesIndex < 10) {
 		if (list->size == 0) 
 			AddToEmptyList(list,item);
-		else if (list->outOfBounds < 0 || list->first == list->curr) //Beyond the start of the list
+		else if (list->outOfBounds < 0 || list->first == list->curr) //current pointer is beyond the start of the list
 			ListPrepend(list,item);
-		else if (list->outOfBounds > 0 || list->curr == NULL) //Beyond the start of the list
+		else if (list->outOfBounds > 0 || list->curr == NULL) //current pointer is beyond the end of the list
 			ListAppend(list,item);
-		else if (list->curr != NULL) {
+		else if (list->curr != NULL) { //current pointer is contained within the list
 			Node* newNode = nodes[nodesIndex++];
 			newNode->item = item;
 
@@ -152,9 +147,7 @@ int ListInsert(LIST* list,void* item) {
 			list->curr->prev = newNode;
 
 			list->curr = newNode;
-
 			list->size++;
-
 		}
 		return 0;
 	}
@@ -203,4 +196,24 @@ int ListPrepend(LIST* list, void* item) {
 		return 0;
 	}
 	return -1;
+}
+
+void *ListRemove(LIST* list) {
+	if (list->size > 0 && list->curr != NULL) {
+		Node* toRemove = list->curr;
+		if (list->curr == list->last) {
+			list->curr->prev->next = NULL;
+			list->curr = list->curr->prev;
+			list->last = list->curr;
+		} else if (list->curr == list->first) {
+			list->curr->next->prev = NULL;
+			list->curr = list->curr->next;
+			list->first = list->curr;
+		} else if (list->curr->next != NULL) {
+			list->curr->prev->next = list->curr->next;
+			list->curr->next->prev = list->curr->prev;
+			list->curr = list->curr->next;
+		}
+		free(toRemove);
+	}
 }
