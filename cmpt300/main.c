@@ -2,10 +2,6 @@
 #include <stdlib.h>
 #include "list.c"
 
-//Pulling from declaration in list.c
-extern LIST* heads[10];
-extern Node* nodes[10];
-
 //For printing out the static nodes array and heads array
 // void printResources(Node* arr[], int len, char type[]) {
 // 	printf(" %c = [",*type);
@@ -18,13 +14,13 @@ extern Node* nodes[10];
 int main(void) {
 
 	//Initialize pool of heads
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < headsArrSize; i++) {
 		LIST* newHead = malloc(sizeof* newHead);
 		heads[i] = newHead;
 	}		
 
 	//Initialize pool of nodes
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < nodesArrSize; i++) {
 		Node* newNode = malloc(sizeof* newNode);
 		nodes[i] = newNode;
 	}
@@ -33,11 +29,11 @@ int main(void) {
 	LIST* myList = ListCreate();
 	LIST* myList2 = ListCreate();
 	
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 1; i++) {
 		int* item = malloc(sizeof* item);
 		*item = i;
 		//int preResult = ListPrepend(myList,item);
-		int addResult = ListPrepend(myList2,item);
+		int addResult = ListAppend(myList2,item);
 		//PrintList(myList2);
 		//printf("List curr = %d\n",*(int*)myList2->curr->item);
 		// int appResult = ListAppend(myList,item);
@@ -46,9 +42,9 @@ int main(void) {
 
 	//printf("List curr = %d\n",*(int*)myList->curr->item);
 
-	for (int i = 0; i < 2; i++) {
-		Node* listNext = ListNext(myList2);
-	}
+	// for (int i = 0; i < 2; i++) {
+	// 	Node* listNext = ListNext(myList2);
+	// }
 
 	//printf("List curr = %d\n",*(int*)myList2->curr->item);
 
@@ -72,19 +68,22 @@ int main(void) {
 	//Node* listNext = ListNext(myList);
 	//Node* listPrev = ListPrev(myList);
 	//listNext = ListNext(myList);
-	int size = ListCount(myList2);
+	printf("List size = %d\n",ListCount(myList2));
 
-	PrintList(myList2);
-	printf("List curr ptr = %d\n",myList2->curr);
+	// PrintList(myList2);
+	// printf("List curr ptr = %d\n",myList2->curr);
 
-	ListRemove(myList2);
+	// ListRemove(myList2);
 
+	// PrintList(myList2);
+	// ListRemove(myList2);
+	printf("START TRIM\n");
 	PrintList(myList2);
-	ListRemove(myList2);
+	void* item2 = ListTrim(myList2);
 	PrintList(myList2);
-	ListRemove(myList2);
-	PrintList(myList2);
-	ListRemove(myList2);
+	printf("END TRIM\n");
+	//ListRemove(myList2);
+	printf("List size = %d\n",ListCount(myList2));
 
 	//printf("\nList first = %d\n",*(int*)(firstItem->item));
 	//printf("List last = %d\n",*(int*)(lastItem->item));
@@ -92,7 +91,6 @@ int main(void) {
 	//printf("List next = %d\n",*(int*)(listNext->item));
 	//printf("List curr = %d\n",myList->curr->next);
 
-	printf("List size = %d\n",size);
 
 	//char* resourceHeads = "H";
 	//char* resourceNodes = "N";

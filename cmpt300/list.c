@@ -1,39 +1,33 @@
 #include "list.h"
+#define headsArrSize 10
+#define nodesArrSize 10
 
-LIST* heads[10];
-Node* nodes[10];
+LIST* heads[headsArrSize];
+Node* nodes[nodesArrSize];
 int headsIndex = 0; // Keeps track of how many list heads are in use
 int nodesIndex = 0; // Keeps track of how many list nodes are in use
-
-LIST* ListCreate() {
-	if (headsIndex < 10) {
-		LIST* newList = heads[headsIndex++];
-		newList->size = 0; // Refers to number of elements in the list
-		newList->outOfBounds = 0;
-		newList->first = NULL;
-		newList->last = NULL;
-		newList->curr = NULL;
-		return newList;
-	}
-	return NULL; // Failed to create new list as all heads are used up
-}
 
 //*----Helper Functions----*//
 
 // Print content of list (set to int right now)
 void PrintList(LIST* list) {
 	Node* currNode = list->first;
-	while (currNode->next != NULL) {
+	if (list->size > 0) {
+		while (currNode->next != NULL) {
+			if (currNode == list->curr)
+				printf("%d(curr)->",*(int*)currNode->item);
+			else
+				printf("%d->",*(int*)currNode->item);
+			currNode = currNode->next;
+		}
 		if (currNode == list->curr)
-			printf("%d(curr)->",*(int*)currNode->item);
+			printf("%d(curr)\n",*(int*)currNode->item);
 		else
-			printf("%d->",*(int*)currNode->item);
-		currNode = currNode->next;
+			printf("%d\n",*(int*)currNode->item);
 	}
-	if (currNode == list->curr)
-		printf("%d(curr)\n",*(int*)currNode->item);
-	else
-		printf("%d\n",*(int*)currNode->item);
+	else {
+		printf("Empty List\n");
+	}
 }
 
 // Adds the first node into the list
@@ -49,6 +43,19 @@ void AddToEmptyList(LIST* list, void* item) {
 }
 
 //*----End of Helper Functions----*//
+
+LIST* ListCreate() {
+	if (headsIndex < headsArrSize) {
+		LIST* newList = heads[headsIndex++];
+		newList->size = 0; // Refers to number of elements in the list
+		newList->outOfBounds = 0;
+		newList->first = NULL;
+		newList->last = NULL;
+		newList->curr = NULL;
+		return newList;
+	}
+	return NULL; // Failed to create new list as all heads are used up
+}
 
 int ListCount(LIST* list) {
 	return list->size;
@@ -102,7 +109,7 @@ void *ListCurr(LIST* list) {
 }
 
 int ListAdd(LIST* list,void* item) {
-	if (nodesIndex < 10) {
+	if (nodesIndex < nodesArrSize) {
 		if (list->size == 0) 
 			AddToEmptyList(list,item);
 		else if (list->outOfBounds > 0 || list->last == list->curr) //current pointer is the last item in the list
@@ -129,7 +136,7 @@ int ListAdd(LIST* list,void* item) {
 }
 
 int ListInsert(LIST* list,void* item) {
-	if (nodesIndex < 10) {
+	if (nodesIndex < nodesArrSize) {
 		if (list->size == 0) 
 			AddToEmptyList(list,item);
 		else if (list->outOfBounds < 0 || list->first == list->curr) //current pointer is beyond the start of the list
@@ -155,7 +162,7 @@ int ListInsert(LIST* list,void* item) {
 }
 
 int ListAppend(LIST* list,void* item) {
-	if (nodesIndex < 10) {
+	if (nodesIndex < nodesArrSize) {
 		if (list->size == 0) {
 			AddToEmptyList(list,item);
 		} else {
@@ -177,7 +184,7 @@ int ListAppend(LIST* list,void* item) {
 }
 
 int ListPrepend(LIST* list, void* item) {
-	if (nodesIndex < 10) {
+	if (nodesIndex < nodesArrSize) {
 		if (list->size == 0) 
 			AddToEmptyList(list,item);
 		else {
@@ -214,6 +221,25 @@ void *ListRemove(LIST* list) {
 			list->curr->next->prev = list->curr->prev;
 			list->curr = list->curr->next;
 		}
-		free(toRemove);
+		nodes[--nodesIndex] = toRemove;
+		list->size--;
 	}
+}
+
+void *ListTrim(LIST* list) {
+	if (list->size > 0) {
+		void* toTrim = list->last->item;
+		if (list->size == 1) {
+			list->first = NULL;
+			list->last = NULL;
+			list->curr = NULL;
+		} else if (list->last != NULL) {
+			list->last = list->last->prev;
+			list->last->next = NULL;
+			list->curr = list->last;
+		}
+		list->size--;
+		return toTrim;
+	}
+	return NULL;
 }
