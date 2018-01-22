@@ -9,6 +9,20 @@ int nodesIndex = 0; // Keeps track of how many list nodes are in use
 
 //*----Helper Functions----*//
 
+void InitializeResources(void) {
+	//Initialize pool of heads
+	for (int i = 0; i < headsArrSize; i++) {
+		LIST* newHead = malloc(sizeof* newHead);
+		heads[i] = newHead;
+	}		
+
+	//Initialize pool of nodes
+	for (int i = 0; i < nodesArrSize; i++) {
+		Node* newNode = malloc(sizeof* newNode);
+		nodes[i] = newNode;
+	}
+}
+
 // Print content of list (set to int right now)
 void PrintList(LIST* list) {
 	Node* currNode = list->first;

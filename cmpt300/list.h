@@ -20,6 +20,9 @@ LIST* ListCreate();
 //Helper function used to add an item to an empty list
 void AddEmpty(LIST* list, void* item);
 
+//Helper function to initialze the head and node resources
+void InitializeResources(void);
+
 //returns the number of items in list
 int ListCount(LIST* list);
 

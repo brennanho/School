@@ -13,27 +13,16 @@
 
 int main(void) {
 
-	//Initialize pool of heads
-	for (int i = 0; i < headsArrSize; i++) {
-		LIST* newHead = malloc(sizeof* newHead);
-		heads[i] = newHead;
-	}		
-
-	//Initialize pool of nodes
-	for (int i = 0; i < nodesArrSize; i++) {
-		Node* newNode = malloc(sizeof* newNode);
-		nodes[i] = newNode;
-	}
-
+	InitializeResources();
 
 	LIST* myList = ListCreate();
 	LIST* myList2 = ListCreate();
 	
-	for (int i = 0; i < 1; i++) {
+	for (int i = 0; i < 10; i++) {
 		int* item = malloc(sizeof* item);
 		*item = i;
 		//int preResult = ListPrepend(myList,item);
-		int addResult = ListAppend(myList2,item);
+		int addResult = ListPrepend(myList2,item);
 		//PrintList(myList2);
 		//printf("List curr = %d\n",*(int*)myList2->curr->item);
 		// int appResult = ListAppend(myList,item);
