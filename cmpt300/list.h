@@ -1,3 +1,6 @@
+#define headsArrSize 10
+#define nodesArrSize 100
+
 //Node container with a type "data" item
 typedef struct Node {
 	void * item;
@@ -11,17 +14,12 @@ typedef struct LIST {
 	Node* first;
 	Node* last;
 	int size;
+	int index; //Index of where the list is located in the array resources
 	int outOfBounds; // current pointer: 0 -> in bounds, -1 -> before the start of the list, 1 -> after the end of the list
 } LIST;
 
 //makes a new, empty list, and returns its reference on success. Returns a NULL pointer on failure.
 LIST* ListCreate();
-
-//Helper function used to add an item to an empty list
-void AddEmpty(LIST* list, void* item);
-
-//Helper function to initialze the head and node resources
-void InitializeResources(void);
 
 //returns the number of items in list
 int ListCount(LIST* list);

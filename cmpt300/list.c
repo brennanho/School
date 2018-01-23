@@ -1,6 +1,6 @@
+#include<stdio.h>
+#include <stdlib.h>
 #include "list.h"
-#define headsArrSize 10
-#define nodesArrSize 10
 
 LIST* heads[headsArrSize];
 Node* nodes[nodesArrSize];
@@ -12,17 +12,19 @@ int nodesIndex = 0; // Keeps track of how many list nodes are in use
 void InitializeResources(void) {
 	//Initialize pool of heads
 	for (int i = 0; i < headsArrSize; i++) {
-		LIST* newHead = malloc(sizeof* newHead);
-		heads[i] = newHead;
+		// LIST* newHead = malloc(sizeof* newHead);
+		static LIST newHead;
+		heads[i] = &newHead + i*sizeof(newHead);
+		//printf("heads[%d] = %d\n",i,heads[i]);
 	}		
-
+	printf("\n");
 	//Initialize pool of nodes
 	for (int i = 0; i < nodesArrSize; i++) {
-		Node* newNode = malloc(sizeof* newNode);
-		nodes[i] = newNode;
+		static Node newNode;
+		nodes[i] = &newNode + i*sizeof(newNode);
+		//printf("nodes[%d] = %d\n",i,nodes[i]->item);
 	}
 }
-
 // Print content of list (set to int right now)
 void PrintList(LIST* list) {
 	Node* currNode = list->first;
@@ -60,7 +62,8 @@ void AddToEmptyList(LIST* list, void* item) {
 
 LIST* ListCreate() {
 	if (headsIndex < headsArrSize) {
-		LIST* newList = heads[headsIndex++];
+		LIST* newList = heads[headsIndex];
+		newList->index = headsIndex++;
 		newList->size = 0; // Refers to number of elements in the list
 		newList->outOfBounds = 0;
 		newList->first = NULL;
@@ -88,33 +91,33 @@ void* ListLast(LIST* list) {
 void* ListNext(LIST* list) {
 	if (list->curr != NULL) {
 		list->curr = list->curr->next;
-		if (list->curr == NULL)
-			list->outOfBounds++;
-		return list->curr;
-	} else 
-		list->outOfBounds++;
-
-	 if (list->outOfBounds == 0) {
-		list->curr = list->first;
+		if (list->curr == NULL) 
+			list->outOfBounds = 1;
 		return list->curr;
 	}
-	return NULL;
+	else if (list->outOfBounds == -1) 
+		list->curr = list->first;
+	else if (list->outOfBounds == 1)
+		list->curr = list->last;
+	
+	list->outOfBounds = 0;
+	return list->curr;
 }
 
 void *ListPrev(LIST* list) {
 	if (list->curr != NULL) {
 		list->curr = list->curr->prev;
 		if (list->curr == NULL)
-			list->outOfBounds--;
+			list->outOfBounds = -1;
 		return list->curr;
-	} else
-		list->outOfBounds--;
-
-	if (list->outOfBounds == 0) {
+	} 
+	else if (list->outOfBounds == -1) 
+		list->curr = list->first;
+	else if (list->outOfBounds == 1)
 		list->curr = list->last;
-		return list->curr;
-	}
-	return NULL;
+	
+	list->outOfBounds = 0;
+	return list->curr;
 }
 
 
@@ -126,9 +129,9 @@ int ListAdd(LIST* list,void* item) {
 	if (nodesIndex < nodesArrSize) {
 		if (list->size == 0) 
 			AddToEmptyList(list,item);
-		else if (list->outOfBounds > 0 || list->last == list->curr) //current pointer is the last item in the list
+		else if (list->outOfBounds == 1 || list->last == list->curr) //current pointer is the last item in the list
 			ListAppend(list,item);
-		else if (list->outOfBounds < 0 || list->curr == NULL) //current pointer is beyond the start of the list
+		else if (list->outOfBounds == -1 || list->curr == NULL) //current pointer is beyond the start of the list
 			ListPrepend(list,item);
 		else if (list->curr != NULL) { //current pointer is contained within the list
 			Node* newNode = nodes[nodesIndex++];
@@ -153,9 +156,9 @@ int ListInsert(LIST* list,void* item) {
 	if (nodesIndex < nodesArrSize) {
 		if (list->size == 0) 
 			AddToEmptyList(list,item);
-		else if (list->outOfBounds < 0 || list->first == list->curr) //current pointer is beyond the start of the list
+		else if (list->outOfBounds == -1 || list->first == list->curr) //current pointer is beyond the start of the list
 			ListPrepend(list,item);
-		else if (list->outOfBounds > 0 || list->curr == NULL) //current pointer is beyond the end of the list
+		else if (list->outOfBounds == 1 || list->curr == NULL) //current pointer is beyond the end of the list
 			ListAppend(list,item);
 		else if (list->curr != NULL) { //current pointer is contained within the list
 			Node* newNode = nodes[nodesIndex++];
@@ -187,8 +190,6 @@ int ListAppend(LIST* list,void* item) {
 			list->last->next = NULL;
 			list->last->item = item;
 			list->curr = list->last;
-			if (list->outOfBounds > 0)
-				list->outOfBounds--;
 			list->size++;
 		}
 		
@@ -209,9 +210,6 @@ int ListPrepend(LIST* list, void* item) {
 			list->first->prev = NULL;
 			list->first->item = item; 
 			list->curr = list->first;
-
-			if (list->outOfBounds < 0)
-				list->outOfBounds++;
 			list->size++;
 		}
 		return 0;
@@ -256,4 +254,12 @@ void *ListTrim(LIST* list) {
 		return toTrim;
 	}
 	return NULL;
+}
+
+void ListConcat(LIST* list1,LIST* list2) {
+	if (list1->size > 0) {
+		list1->last->next = list2->first;
+		list1->size = list1->size + list2->size;
+		heads[list2->index] = NULL;
+	}
 }
