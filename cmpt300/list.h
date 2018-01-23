@@ -1,5 +1,5 @@
 #define headsArrSize 10
-#define nodesArrSize 100
+#define nodesArrSize 50
 
 //Node container with a type "data" item
 typedef struct Node {
@@ -74,4 +74,4 @@ void ListConcat(LIST* list1,LIST* list2);
 //Return last item and take it out of list. Make the new last item the current one.
 void *ListTrim(LIST* list);
 
-//void *ListSearch(list, comparator, comparisonArg);
+void *ListSearch(LIST* list, int (*comparator)(void*,void*),void* comparisonArg);

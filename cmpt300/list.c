@@ -9,27 +9,23 @@ int nodesIndex = 0; // Keeps track of how many list nodes are in use
 
 //*----Helper Functions----*//
 
-//Helper function used to add an item to an empty list
-void AddEmpty(LIST* list, void* item);
-//Helper function to initialze the head and node resources
-void InitializeResources(void);
-//Helper function used for printing contents of a list
-void PrintList(LIST* list);
-
 void InitializeResources(void) {
 	//Initialize pool of heads
 	for (int i = 0; i < headsArrSize; i++) {
-		// LIST* newHead = malloc(sizeof* newHead);
-		static LIST newHead;
-		heads[i] = &newHead + i*sizeof(newHead);
+		LIST* newHead = malloc(sizeof* newHead);
+		heads[i] = newHead;
+		// static LIST newHead;
+		// heads[i] = &newHead + i*sizeof(newHead);
 		//printf("heads[%d] = %d\n",i,heads[i]);
 	}		
-	printf("\n");
+
 	//Initialize pool of nodes
 	for (int i = 0; i < nodesArrSize; i++) {
-		static Node newNode;
-		nodes[i] = &newNode + i*sizeof(newNode);
-		//printf("nodes[%d] = %d\n",i,nodes[i]->item);
+		Node* newNode = malloc(sizeof* newNode);
+		nodes[i] = newNode;
+		// static Node newNode;
+		// nodes[i] = &newNode + i*sizeof(newNode);
+		printf("nodes ptr = %d\n",nodes[i]);
 	}
 }
 // Print content of list (set to int right now)
@@ -63,6 +59,12 @@ void AddToEmptyList(LIST* list, void* item) {
 	list->last = list->first;
 	list->curr = list->first;
 	list->size++;
+}
+
+int comparator(void* item, void* comparisonArg) {
+	if (*(int*)item == *(int*)comparisonArg)
+		return 1;
+	return 0;
 }
 
 //*----End of Helper Functions----*//
@@ -199,7 +201,6 @@ int ListAppend(LIST* list,void* item) {
 			list->curr = list->last;
 			list->size++;
 		}
-		
 		return 0;
 	}
 	return -1;
@@ -269,4 +270,17 @@ void ListConcat(LIST* list1,LIST* list2) {
 		list1->size = list1->size + list2->size;
 		heads[list2->index] = NULL;
 	}
+}
+
+void *ListSearch(LIST* list, int (*comparator)(void*,void*),void* comparisonArg) {
+	Node* curr = list->curr;
+	while (curr != NULL) {
+		if (comparator(comparisonArg,curr->item) == 1)
+		{
+			list->curr = curr;
+			return curr;
+		}
+		curr = curr->next;
+	}
+	return NULL;
 }

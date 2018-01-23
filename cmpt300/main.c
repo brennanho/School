@@ -2,15 +2,20 @@
 #include <stdlib.h>
 #include "list.h"
 
+extern LIST* heads[headsArrSize];
+extern Node* nodes[nodesArrSize];
+
 //Helper function used to add an item to an empty list
 void AddEmpty(LIST* list, void* item);
-
 //Helper function to initialze the head and node resources
 void InitializeResources(void);
-
 //Helper function used for printing contents of a list
 void PrintList(LIST* list);
 
+//Used for ListSearch
+int comparator(void* item, void* comparisonArg);
+
+//main test driver for list
 int main(void) {
 
 	InitializeResources();
@@ -24,6 +29,10 @@ int main(void) {
 		int preResult = ListPrepend(myList,item);
 		int appResult = ListAppend(myList2,item);
 	}
+
+	// for (int i = 0; i < nodesArrSize; i++) {
+	// 	printf("nodes ptr main = %d\n",nodes[i]);
+	// }
 
 	PrintList(myList);
 	ListFirst(myList);
@@ -49,24 +58,24 @@ int main(void) {
 	int k = 77;
 	*item2 = k;
 
+	int* item3 = malloc(sizeof *item);
+	int l = 0;
+	*item3 = l;
+
 	ListInsert(myList,item);
 	PrintList(myList);
 	ListAdd(myList,item2);
 	PrintList(myList);
 
-	ListRemove(myList);
-	PrintList(myList);
-	ListTrim(myList);
-	PrintList(myList);
-
-	PrintList(myList2);
-
 	ListConcat(myList,myList2);
 
 	PrintList(myList);
-	PrintList(myList2);
+	
+	ListSearch(myList,comparator,item3);
+	
+	PrintList(myList);
 
 	printf("list index = %d\n",myList->index);
 	printf("list2 index = %d\n",myList2->index);
-
+	return 0;
 }
