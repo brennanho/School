@@ -9,6 +9,13 @@ int nodesIndex = 0; // Keeps track of how many list nodes are in use
 
 //*----Helper Functions----*//
 
+//Helper function used to add an item to an empty list
+void AddEmpty(LIST* list, void* item);
+//Helper function to initialze the head and node resources
+void InitializeResources(void);
+//Helper function used for printing contents of a list
+void PrintList(LIST* list);
+
 void InitializeResources(void) {
 	//Initialize pool of heads
 	for (int i = 0; i < headsArrSize; i++) {
