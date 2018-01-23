@@ -2,13 +2,12 @@
 #include <stdlib.h>
 #include "list.h"
 
-extern LIST* heads[headsArrSize];
-extern Node* nodes[nodesArrSize];
+extern LIST heads[headsArrSize];
+extern Node nodes[nodesArrSize];
 
 //Helper function used to add an item to an empty list
 void AddEmpty(LIST* list, void* item);
-//Helper function to initialze the head and node resources
-void InitializeResources(void);
+
 //Helper function used for printing contents of a list
 void PrintList(LIST* list);
 
@@ -17,8 +16,6 @@ int comparator(void* item, void* comparisonArg);
 
 //main test driver for list
 int main(void) {
-
-	InitializeResources();
 
 	LIST* myList = ListCreate();
 	LIST* myList2 = ListCreate();
@@ -72,7 +69,7 @@ int main(void) {
 	PrintList(myList);
 	
 	ListSearch(myList,comparator,item3);
-	
+
 	PrintList(myList);
 
 	printf("list index = %d\n",myList->index);

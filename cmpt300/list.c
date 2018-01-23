@@ -2,32 +2,13 @@
 #include <stdlib.h>
 #include "list.h"
 
-LIST* heads[headsArrSize];
-Node* nodes[nodesArrSize];
+LIST heads[headsArrSize];
+Node nodes[nodesArrSize];
 int headsIndex = 0; // Keeps track of how many list heads are in use
 int nodesIndex = 0; // Keeps track of how many list nodes are in use
 
-//*----Helper Functions----*//
+//*----Helper Functions----*/
 
-void InitializeResources(void) {
-	//Initialize pool of heads
-	for (int i = 0; i < headsArrSize; i++) {
-		LIST* newHead = malloc(sizeof* newHead);
-		heads[i] = newHead;
-		// static LIST newHead;
-		// heads[i] = &newHead + i*sizeof(newHead);
-		//printf("heads[%d] = %d\n",i,heads[i]);
-	}		
-
-	//Initialize pool of nodes
-	for (int i = 0; i < nodesArrSize; i++) {
-		Node* newNode = malloc(sizeof* newNode);
-		nodes[i] = newNode;
-		// static Node newNode;
-		// nodes[i] = &newNode + i*sizeof(newNode);
-		printf("nodes ptr = %d\n",nodes[i]);
-	}
-}
 // Print content of list (set to int right now)
 void PrintList(LIST* list) {
 	Node* currNode = list->first;
@@ -52,7 +33,7 @@ void PrintList(LIST* list) {
 // Adds the first node into the list
 // This is only called by the other "adding to list" functions when the list is empty
 void AddToEmptyList(LIST* list, void* item) {
-	list->first = nodes[nodesIndex++];
+	list->first = &nodes[nodesIndex++];
 	list->first->item = item;
 	list->first->next = NULL;
 	list->first->prev = NULL;
@@ -71,7 +52,7 @@ int comparator(void* item, void* comparisonArg) {
 
 LIST* ListCreate() {
 	if (headsIndex < headsArrSize) {
-		LIST* newList = heads[headsIndex];
+		LIST* newList = &heads[headsIndex];
 		newList->index = headsIndex++;
 		newList->size = 0; // Refers to number of elements in the list
 		newList->outOfBounds = 0;
@@ -143,7 +124,7 @@ int ListAdd(LIST* list,void* item) {
 		else if (list->outOfBounds == -1 || list->curr == NULL) //current pointer is beyond the start of the list
 			ListPrepend(list,item);
 		else if (list->curr != NULL) { //current pointer is contained within the list
-			Node* newNode = nodes[nodesIndex++];
+			Node* newNode = &nodes[nodesIndex++];
 			newNode->item = item;
 			
 			list->curr->next->prev = newNode;
@@ -170,7 +151,7 @@ int ListInsert(LIST* list,void* item) {
 		else if (list->outOfBounds == 1 || list->curr == NULL) //current pointer is beyond the end of the list
 			ListAppend(list,item);
 		else if (list->curr != NULL) { //current pointer is contained within the list
-			Node* newNode = nodes[nodesIndex++];
+			Node* newNode = &nodes[nodesIndex++];
 			newNode->item = item;
 
 			list->curr->prev->next = newNode;
@@ -193,7 +174,7 @@ int ListAppend(LIST* list,void* item) {
 			AddToEmptyList(list,item);
 		} else {
 			Node* lastPrev = list->last;
-			list->last->next = nodes[nodesIndex++];
+			list->last->next = &nodes[nodesIndex++];
 			list->last = list->last->next;
 			list->last->prev = lastPrev;
 			list->last->next = NULL;
@@ -212,7 +193,7 @@ int ListPrepend(LIST* list, void* item) {
 			AddToEmptyList(list,item);
 		else {
 			Node* firstPrev = list->first;
-			list->first->prev = nodes[nodesIndex++];
+			list->first->prev = &nodes[nodesIndex++];
 			list->first = list->first->prev;
 			list->first->next = firstPrev;
 			list->first->prev = NULL;
@@ -227,7 +208,7 @@ int ListPrepend(LIST* list, void* item) {
 
 void *ListRemove(LIST* list) {
 	if (list->size > 0 && list->curr != NULL) {
-		Node* toRemove = list->curr;
+		//Node* toRemove = list->curr;
 		if (list->curr == list->last) {
 			list->curr->prev->next = NULL;
 			list->curr = list->curr->prev;
@@ -241,7 +222,7 @@ void *ListRemove(LIST* list) {
 			list->curr->next->prev = list->curr->prev;
 			list->curr = list->curr->next;
 		}
-		nodes[--nodesIndex] = toRemove;
+		//&nodes[--nodesIndex] = toRemove;
 		list->size--;
 	}
 }
@@ -268,7 +249,7 @@ void ListConcat(LIST* list1,LIST* list2) {
 	if (list1->size > 0) {
 		list1->last->next = list2->first;
 		list1->size = list1->size + list2->size;
-		heads[list2->index] = NULL;
+		//heads[list2->index] = NULL;
 	}
 }
 
