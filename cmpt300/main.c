@@ -27,10 +27,6 @@ int main(void) {
 		int appResult = ListAppend(myList2,item);
 	}
 
-	// for (int i = 0; i < nodesArrSize; i++) {
-	// 	printf("nodes ptr main = %d\n",nodes[i]);
-	// }
-
 	PrintList(myList);
 	ListFirst(myList);
 	PrintList(myList);
@@ -41,10 +37,10 @@ int main(void) {
 		ListPrev(myList);
 		PrintList(myList);
 	}
+
 	for (int i = 0; i < ListCount(myList)/2; i++) {
 		ListNext(myList);
 		PrintList(myList);
-
 	}
 
 	int* item = malloc(sizeof *item);
@@ -67,10 +63,11 @@ int main(void) {
 	ListConcat(myList,myList2);
 
 	PrintList(myList);
+	PrintList(myList2);
 	
-	ListSearch(myList,comparator,item3);
-
-	PrintList(myList);
+	
+	// ListSearch(myList,comparator,item3);
+	// PrintList(myList);
 
 	printf("list index = %d\n",myList->index);
 	printf("list2 index = %d\n",myList2->index);
