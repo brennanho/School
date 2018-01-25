@@ -136,7 +136,6 @@ int ListAdd(LIST* list,void* item) {
 			list->curr = newNode;
 			list->size++;
 		} 
-
 		return 0;
 	}
  	return -1;
