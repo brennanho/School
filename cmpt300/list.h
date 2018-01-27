@@ -1,5 +1,5 @@
 #define headsArrSize 10
-#define nodesArrSize 50
+#define nodesArrSize 100
 
 //Node container with a type "data" item
 typedef struct Node {
@@ -74,4 +74,13 @@ void ListConcat(LIST* list1,LIST* list2);
 //Return last item and take it out of list. Make the new last item the current one.
 void *ListTrim(LIST* list);
 
+/*searches list starting at the current item until the end is reached or a match is
+found. In this context, a match is determined by the comparator parameter. This
+parameter is a pointer to a routine that takes as its first argument an item pointer,
+and as its second argument comparisonArg. Comparator returns 0 if the item and
+comparisonArg don't match, or 1 if they do. Exactly what constitutes a match is
+up to the implementor of comparator. If a match is found, the current pointer is
+left at the matched item and the pointer to that item is returned. If no match is
+found, the current pointer is left beyond the end of the list and a NULL pointer is
+returned*/
 void *ListSearch(LIST* list, int (*comparator)(void*,void*),void* comparisonArg);

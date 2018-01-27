@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include "list.h"
 
-extern LIST heads[headsArrSize];
-extern Node nodes[nodesArrSize];
-
 //Helper function used to add an item to an empty list
 void AddEmpty(LIST* list, void* item);
 
@@ -51,25 +48,28 @@ int main(void) {
 	int k = 77;
 	*item2 = k;
 
-	int* item3 = malloc(sizeof *item);
-	int l = 0;
-	*item3 = l;
-
 	ListInsert(myList,item);
 	PrintList(myList);
 	ListAdd(myList,item2);
 	PrintList(myList);
+	ListRemove(myList);
+	PrintList(myList);
 
-	ListConcat(myList,myList2);
+	for (int i = 0; i < 10; i++) {
+		ListRemove(myList);
+	}
 
 	PrintList(myList);
-	PrintList(myList2);
-	
-	
-	// ListSearch(myList,comparator,item3);
-	// PrintList(myList);
 
-	printf("list index = %d\n",myList->index);
-	printf("list2 index = %d\n",myList2->index);
+	// ListConcat(myList,myList2);
+
+	// PrintList(myList);
+	// PrintList(myList2);
+
+	// // ListSearch(myList,comparator,item3);
+	// // PrintList(myList);
+
+	// printf("list index = %d\n",myList->index);
+	// printf("list2 index = %d\n",myList2->index);
 	return 0;
 }
