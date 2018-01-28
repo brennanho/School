@@ -1,5 +1,5 @@
 #define headsArrSize 10
-#define nodesArrSize 100
+#define nodesArrSize 10
 
 //Node container with a type "data" item
 typedef struct Node {
@@ -14,7 +14,6 @@ typedef struct LIST {
 	Node* first;
 	Node* last;
 	int size;
-	int index; //Index of where the list is located in the array resources
 	int outOfBounds; // current pointer: 0 -> in bounds, -1 -> before the start of the list, 1 -> after the end of the list
 } LIST;
 

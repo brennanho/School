@@ -4,8 +4,10 @@
 
 LIST heads[headsArrSize];
 Node nodes[nodesArrSize];
-LIST* headsStack;
-LIST* nodesStack;
+LIST headsStackMem = {NULL,NULL,NULL,0,0};
+LIST nodesStackMem = {NULL,NULL,NULL,0,0};
+LIST* headsStack = &headsStackMem;
+LIST* nodesStack = &nodesStackMem;
 int headsIndex = 0; // Keeps track of how many list heads are in use
 int nodesIndex = 0; // Keeps track of how many list nodes are in use
 
@@ -32,10 +34,25 @@ void PrintList(LIST* list) {
 	}
 }
 
+Node* getAvailableNode(int resource) { 
+	if (resource == 0) {
+		if (nodesIndex < nodesArrSize) {
+			return &nodes[nodesIndex++];
+		} else if (nodesStack->size > 0) {
+			printf("Getting from nodesStack\n");
+			Node* newNode = nodesStack->last;
+			nodesStack->last = nodesStack->last->prev;
+			nodesStack->size--;
+			return newNode;
+		}
+	}
+	return NULL;
+}
+
 // Adds the first node into the list
 // This is only called by the other "adding to list" functions when the list is empty
 void AddToEmptyList(LIST* list, void* item) {
-	list->first = &nodes[nodesIndex++];
+	list->first = getAvailableNode(0);
 	list->first->item = item;
 	list->first->next = NULL;
 	list->first->prev = NULL;
@@ -51,32 +68,24 @@ int comparator(void* item, void* comparisonArg) {
 	return 0;
 }
 
-void* getAvailable(int resource) { 
-	if (resource == 0) {
-		if (nodesIndex < nodesArrSize) {
-			return &nodes[nodesIndex++];
-		} else if (nodesStack->size > 0) {
-			printf("Getting from &nodesStack.");
-			Node* newNode = nodesStack->curr;
-			nodesStack->curr = nodesStack->curr->prev;
-			nodesStack->size--;
-			return newNode;
-		}
+void StackAppend(LIST* stack, void* node) {
+	if (stack->first == 0) {
+		stack->first = node;
+		stack->last = node;
 	} else {
-		if (headsIndex < headsArrSize) {
-			return &heads[headsIndex++];
-		} else if (&nodesStack->size > 0) {
-			printf("Getting from headsStack\n");
-		}
+		Node* tempLast = stack->last;
+		stack->last = stack->last->next;
+		stack->last = node;
+		stack->last->prev = tempLast;
 	}
+	stack->size++;
 }
 
 //*----End of Helper Functions----*//
 
 LIST* ListCreate() {
 	if (headsIndex < headsArrSize) {
-		LIST* newList = &heads[headsIndex];
-		newList->index = headsIndex++;
+		LIST* newList = &heads[headsIndex++];
 		newList->size = 0; // Refers to number of elements in the list
 		newList->outOfBounds = 0;
 		newList->first = NULL;
@@ -139,7 +148,7 @@ void *ListCurr(LIST* list) {
 }
 
 int ListAdd(LIST* list,void* item) {
-	if (nodesIndex < nodesArrSize) {
+	if (nodesIndex < nodesArrSize || nodesStack->size > 0) {
 		if (list->size == 0) 
 			AddToEmptyList(list,item);
 		else if (list->outOfBounds == 1 || list->last == list->curr) //current pointer is the last item in the list
@@ -165,7 +174,7 @@ int ListAdd(LIST* list,void* item) {
 }
 
 int ListInsert(LIST* list,void* item) {
-	if (nodesIndex < nodesArrSize) {
+	if (nodesIndex < nodesArrSize || nodesStack->size > 0) {
 		if (list->size == 0) 
 			AddToEmptyList(list,item);
 		else if (list->outOfBounds == -1 || list->first == list->curr) //current pointer is beyond the start of the list
@@ -191,12 +200,12 @@ int ListInsert(LIST* list,void* item) {
 }
 
 int ListAppend(LIST* list,void* item) {
-	if (nodesIndex < nodesArrSize) {
+	if (nodesIndex < nodesArrSize || nodesStack->size > 0) {
 		if (list->size == 0) {
 			AddToEmptyList(list,item);
 		} else {
 			Node* lastPrev = list->last;
-			list->last->next = getAvailable(0);
+			list->last->next = getAvailableNode(0);
 			list->last = list->last->next;
 			list->last->prev = lastPrev;
 			list->last->next = NULL;
@@ -210,12 +219,12 @@ int ListAppend(LIST* list,void* item) {
 }
 
 int ListPrepend(LIST* list, void* item) {
-	if (nodesIndex < nodesArrSize) {
+	if (nodesIndex < nodesArrSize || nodesStack->size > 0) {
 		if (list->size == 0) 
 			AddToEmptyList(list,item);
 		else {
 			Node* firstPrev = list->first;
-			list->first->prev = getAvailable(0);
+			list->first->prev = getAvailableNode(0);
 			list->first = list->first->prev;
 			list->first->next = firstPrev;
 			list->first->prev = NULL;
@@ -231,21 +240,21 @@ int ListPrepend(LIST* list, void* item) {
 void *ListRemove(LIST* list) {
 	if (list->size > 0 && list->curr != NULL) {
 		Node* toRemove = list->curr;
-		if (list->curr == list->last) {
-			list->curr->prev->next = NULL;
-			list->curr = list->curr->prev;
-			list->last = list->curr;
-		} else if (list->curr == list->first) {
-			list->curr->next->prev = NULL;
-			list->curr = list->curr->next;
-			list->first = list->curr;
+		if (list->curr == list->last || list->curr == list->last) {
+			ListTrim(list);
 		} else if (list->curr->next != NULL) {
 			list->curr->prev->next = list->curr->next;
 			list->curr->next->prev = list->curr->prev;
 			list->curr = list->curr->next;
+			list->size--;
+			StackAppend(nodesStack,toRemove);
 		}
-		list->size--;
-		ListAppend(nodesStack,toRemove);
+
+		//printf("%d\n",list->size);
+
+
+		//PrintList(nodesStack);
+
 		return toRemove;
 	}
 	return NULL;
@@ -264,7 +273,7 @@ void *ListTrim(LIST* list) {
 			list->curr = list->last;
 		}
 		list->size--;
-		ListAppend(nodesStack,toTrim);
+		StackAppend(nodesStack,toTrim);
 		return toTrim->item;
 	}
 	return NULL;
