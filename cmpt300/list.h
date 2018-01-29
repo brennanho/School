@@ -1,5 +1,5 @@
 #define headsArrSize 10
-#define nodesArrSize 10
+#define nodesArrSize 500
 
 //Node container with a type "data" item
 typedef struct Node {
@@ -10,7 +10,7 @@ typedef struct Node {
 
 //List with "size" elements of type Node
 typedef struct LIST {
-	Node * curr;
+	Node* curr;
 	Node* first;
 	Node* last;
 	int size;
@@ -66,9 +66,9 @@ void *ListRemove(LIST* list);
 //List2 no longer exists after the operation.
 void ListConcat(LIST* list1,LIST* list2);
 
-// delete list. itemFree is a pointer to a routine that frees an item. 
+//delete list. itemFree is a pointer to a routine that frees an item. 
 //It should be invoked (within ListFree) as: (*itemFree)(itemToBeFreed);
-//void ListFree(LIST* list, itemFree);
+void ListFree(LIST* list,void (*itemFree)(void* itemToBeFreed));
 
 //Return last item and take it out of list. Make the new last item the current one.
 void *ListTrim(LIST* list);

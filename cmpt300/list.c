@@ -2,14 +2,22 @@
 #include <stdlib.h>
 #include "list.h"
 
-LIST heads[headsArrSize];
-Node nodes[nodesArrSize];
+/*Nodes and Heads Description:
+	In this program, nodes and list heads are statically allocated in two arrays.
+	When a node or head is removed from the users list, it is pushed onto their
+	respective stacks for future use. 
+*/
+
+//global variable declaration
+LIST heads[headsArrSize]; //Pool of LIST head resources
+Node headsRecycle[headsArrSize]; //Used to hold used LIST heads when returned to pool
+Node nodes[nodesArrSize]; //Pool of Node resources
 LIST headsStackMem = {NULL,NULL,NULL,0,0};
 LIST nodesStackMem = {NULL,NULL,NULL,0,0};
-LIST* headsStack = &headsStackMem;
-LIST* nodesStack = &nodesStackMem;
-int headsIndex = 0; // Keeps track of how many list heads are in use
-int nodesIndex = 0; // Keeps track of how many list nodes are in use
+LIST* headsStack = &headsStackMem; // Pool of heads stored in a stack (list)
+LIST* nodesStack = &nodesStackMem; // Pool of nodes stored in a stack (list)
+int headsIndex = 0; // Keeps track of how many list heads are in use from static array
+int nodesIndex = 0; // Keeps track of how many list nodes are in use from static array
 
 //*----Helper Functions----*/
 
@@ -34,17 +42,17 @@ void PrintList(LIST* list) {
 	}
 }
 
-Node* getAvailableNode(int resource) { 
-	if (resource == 0) {
-		if (nodesIndex < nodesArrSize) {
-			return &nodes[nodesIndex++];
-		} else if (nodesStack->size > 0) {
-			printf("Getting from nodesStack\n");
-			Node* newNode = nodesStack->last;
-			nodesStack->last = nodesStack->last->prev;
-			nodesStack->size--;
-			return newNode;
-		}
+//Retrieves an available node. Either looks to see if there are still unused nodes avaialbe from static array. 
+//If no nodes are available in the static array, it looks into the node stack.
+//If there are no nodes avaiable, return a NULL pointer
+Node* getAvailableNode(void) { 
+	if (nodesIndex < nodesArrSize) {
+		return &nodes[nodesIndex++];
+	} else if (nodesStack->size > 0) {
+		Node* newNode = nodesStack->last;
+		nodesStack->last = nodesStack->last->prev;
+		nodesStack->size--;
+		return newNode;
 	}
 	return NULL;
 }
@@ -52,7 +60,7 @@ Node* getAvailableNode(int resource) {
 // Adds the first node into the list
 // This is only called by the other "adding to list" functions when the list is empty
 void AddToEmptyList(LIST* list, void* item) {
-	list->first = getAvailableNode(0);
+	list->first = getAvailableNode();
 	list->first->item = item;
 	list->first->next = NULL;
 	list->first->prev = NULL;
@@ -68,29 +76,64 @@ int comparator(void* item, void* comparisonArg) {
 	return 0;
 }
 
-void StackAppend(LIST* stack, void* node) {
-	if (stack->first == 0) {
-		stack->first = node;
-		stack->last = node;
+//Returns used nodes to node stack pool 
+void itemFree(void* itemToBeFreed) {
+	if (nodesStack->size == 0) {
+		nodesStack->first = itemToBeFreed;
+		nodesStack->last = itemToBeFreed;
 	} else {
-		Node* tempLast = stack->last;
-		stack->last = stack->last->next;
-		stack->last = node;
-		stack->last->prev = tempLast;
+		Node* tempLast = nodesStack->last;
+		nodesStack->last->next = itemToBeFreed;
+		nodesStack->last = nodesStack->last->next;
+		nodesStack->last->prev = tempLast;
 	}
-	stack->size++;
+	nodesStack->size++;
+}
+
+//Returns used heads to head stack pool
+void headFree(LIST* headToBeFreed) {
+	headToBeFreed->size = 0;
+	headsStack->curr->item = headToBeFreed;
+	headsStack->size++;
+	ListNext(headsStack);
+}
+
+//Stack used to keep number of recycled lists 
+void createHeadsStack(void) {
+	headsStack->first = &headsRecycle[0];
+	headsStack->last = &headsRecycle[0];
+
+	for (int i = 1; i < headsArrSize; i++) {
+		Node* tempPrev = headsStack->last;
+		headsStack->last->next = &headsRecycle[i];
+		headsStack->last = headsStack->last->next;
+		headsStack->last->prev = tempPrev;
+		headsStack->size++;
+	} 
+	ListFirst(headsStack);
 }
 
 //*----End of Helper Functions----*//
 
+//*----list.h implementation----*//
+
 LIST* ListCreate() {
 	if (headsIndex < headsArrSize) {
+		if (headsIndex == 0) { // Initialize headStack for "to be returned" list heads
+			createHeadsStack();
+		}
+
 		LIST* newList = &heads[headsIndex++];
-		newList->size = 0; // Refers to number of elements in the list
+		newList->size = 0;
 		newList->outOfBounds = 0;
 		newList->first = NULL;
 		newList->last = NULL;
 		newList->curr = NULL;
+		return newList;
+	} else if (headsStack->size > 0) {
+		ListPrev(headsStack);
+		LIST* newList = headsStack->curr->item;
+		headsStack->size--;
 		return newList;
 	}
 	return NULL; // Failed to create new list as all heads are used up
@@ -102,20 +145,26 @@ int ListCount(LIST* list) {
 
 void* ListFirst(LIST* list) {
 	list->curr = list->first;
-	return list->first;
+	if (list->first != NULL)
+		return list->first->item;
+	return NULL;
 }
 
 void* ListLast(LIST* list) {
 	list->curr = list->last;
-	return list->last;
+	if (list->last != NULL)
+		return list->last->item;
+	return NULL;
 }
 
 void* ListNext(LIST* list) {
 	if (list->curr != NULL) {
 		list->curr = list->curr->next;
-		if (list->curr == NULL) 
+		if (list->curr == NULL) {
 			list->outOfBounds = 1;
-		return list->curr;
+			return NULL;
+		}
+		return list->curr->item;
 	}
 	else if (list->outOfBounds == -1) 
 		list->curr = list->first;
@@ -123,15 +172,19 @@ void* ListNext(LIST* list) {
 		list->curr = list->last;
 	
 	list->outOfBounds = 0;
-	return list->curr;
+	if (list->curr != NULL)
+		return list->curr->item;
+	return NULL;
 }
 
 void *ListPrev(LIST* list) {
 	if (list->curr != NULL) {
 		list->curr = list->curr->prev;
-		if (list->curr == NULL)
+		if (list->curr == NULL){
 			list->outOfBounds = -1;
-		return list->curr;
+			return NULL;
+		}
+		return list->curr->item;
 	} 
 	else if (list->outOfBounds == -1) 
 		list->curr = list->first;
@@ -139,12 +192,17 @@ void *ListPrev(LIST* list) {
 		list->curr = list->last;
 	
 	list->outOfBounds = 0;
-	return list->curr;
+	if (list->curr != NULL)
+		return list->curr->item;
+	return NULL;
 }
 
 
 void *ListCurr(LIST* list) {
-	return list->curr;
+	if (list->curr != NULL) {
+		return list->curr->item;
+	}
+	return NULL; // current item is beyond one end of the list or list->size == 0
 }
 
 int ListAdd(LIST* list,void* item) {
@@ -156,7 +214,7 @@ int ListAdd(LIST* list,void* item) {
 		else if (list->outOfBounds == -1 || list->curr == NULL) //current pointer is beyond the start of the list
 			ListPrepend(list,item);
 		else if (list->curr != NULL) { //current pointer is contained within the list
-			Node* newNode = &nodes[nodesIndex++];
+			Node* newNode = getAvailableNode();
 			newNode->item = item;
 			
 			list->curr->next->prev = newNode;
@@ -170,6 +228,7 @@ int ListAdd(LIST* list,void* item) {
 		} 
 		return 0;
 	}
+	printf("Error: no more available nodes\n");
  	return -1;
 }
 
@@ -182,20 +241,21 @@ int ListInsert(LIST* list,void* item) {
 		else if (list->outOfBounds == 1 || list->curr == NULL) //current pointer is beyond the end of the list
 			ListAppend(list,item);
 		else if (list->curr != NULL) { //current pointer is contained within the list
-			Node* newNode = &nodes[nodesIndex++];
+			Node* newNode = getAvailableNode();
 			newNode->item = item;
 
 			list->curr->prev->next = newNode;
 			newNode->prev = list->curr->prev;
 
-			newNode->next = list->curr;
 			list->curr->prev = newNode;
+			newNode->next = list->curr;
 
 			list->curr = newNode;
 			list->size++;
 		}
 		return 0;
 	}
+	printf("Error: no more available nodes\n");
  	return -1;
 }
 
@@ -205,7 +265,7 @@ int ListAppend(LIST* list,void* item) {
 			AddToEmptyList(list,item);
 		} else {
 			Node* lastPrev = list->last;
-			list->last->next = getAvailableNode(0);
+			list->last->next = getAvailableNode();
 			list->last = list->last->next;
 			list->last->prev = lastPrev;
 			list->last->next = NULL;
@@ -215,6 +275,7 @@ int ListAppend(LIST* list,void* item) {
 		}
 		return 0;
 	}
+	printf("Error: no more available nodes\n");
 	return -1;
 }
 
@@ -224,7 +285,7 @@ int ListPrepend(LIST* list, void* item) {
 			AddToEmptyList(list,item);
 		else {
 			Node* firstPrev = list->first;
-			list->first->prev = getAvailableNode(0);
+			list->first->prev = getAvailableNode();
 			list->first = list->first->prev;
 			list->first->next = firstPrev;
 			list->first->prev = NULL;
@@ -234,30 +295,31 @@ int ListPrepend(LIST* list, void* item) {
 		}
 		return 0;
 	}
+	printf("Error: no more available nodes\n");
 	return -1;
 }
 
 void *ListRemove(LIST* list) {
 	if (list->size > 0 && list->curr != NULL) {
 		Node* toRemove = list->curr;
-		if (list->curr == list->last || list->curr == list->last) {
-			ListTrim(list);
+		if (list->curr == list->last || list->size == 1) {
+			ListTrim(list); 
+		} else if (list->curr == list->first) { 
+			list->first = list->first->next;
+			list->first->prev = NULL;
+			list->curr = list->first;
+			list->size--;
+			itemFree(toRemove);
 		} else if (list->curr->next != NULL) {
 			list->curr->prev->next = list->curr->next;
 			list->curr->next->prev = list->curr->prev;
 			list->curr = list->curr->next;
 			list->size--;
-			StackAppend(nodesStack,toRemove);
+			itemFree(toRemove);
 		}
-
-		//printf("%d\n",list->size);
-
-
-		//PrintList(nodesStack);
-
-		return toRemove;
+		return toRemove->item;
 	}
-	return NULL;
+	return NULL; //List is empty, no items to remove
 }
 
 void *ListTrim(LIST* list) {
@@ -273,17 +335,40 @@ void *ListTrim(LIST* list) {
 			list->curr = list->last;
 		}
 		list->size--;
-		StackAppend(nodesStack,toTrim);
+		itemFree(toTrim);
 		return toTrim->item;
 	}
-	return NULL;
+	return NULL; //List is empty, no items to trim
+}
+
+void ListFree(LIST* list,void (*itemFree)(void* itemToBeFreed)) {
+	while (list->size > 0) {
+		Node* toTrim = list->last;
+		if (list->size == 1) {
+			list->first = NULL;
+			list->last = NULL;
+			list->curr = NULL;
+		} else if (list->last != NULL) {
+			list->last = list->last->prev;
+			list->last->next = NULL;
+			list->curr = list->last;
+		}
+		list->size--;
+		itemFree(toTrim);
+	} 
+
+	headFree(list);
 }
 
 void ListConcat(LIST* list1,LIST* list2) {
 	if (list1->size > 0) {
-		list1->last->next = list2->first;
-		list1->size = list1->size + list2->size;
-		//heads[list2->index] = NULL;
+		Node* curr = list1->curr;
+		ListFirst(list2);
+		while (list2->size > 0) {
+			ListAppend(list1,ListRemove(list2));
+		}
+		list1->curr = curr;
+		headFree(list2); //List head is now put back into resource pool while nodes are still in use
 	}
 }
 
@@ -293,9 +378,13 @@ void *ListSearch(LIST* list, int (*comparator)(void*,void*),void* comparisonArg)
 		if (comparator(comparisonArg,curr->item) == 1)
 		{
 			list->curr = curr;
-			return curr;
+			return list->curr->item;
 		}
 		curr = curr->next;
 	}
-	return NULL;
+	list->outOfBounds = 1;
+	list->curr = NULL;
+	return NULL; // Item was not found in list, return NULL pointer
 }
+
+//*----end of list.h implementation----*//
