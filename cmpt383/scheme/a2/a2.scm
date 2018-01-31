@@ -2,9 +2,12 @@
 (define singleton?
 	(lambda (x)
 		(cond 
+			((not (list? x)) 
+				#f)
 			((null? (cdr x))
 				 #t)
-			(else #f)
+			(else 
+				#f)
 		)
 	)
 )
@@ -91,12 +94,14 @@
 	)
 )
 
-;q8 Helper
+;q8 Helper (removes the last element in a list, i.e. opposite of cdr)
 (define my-remove-last
 	(lambda (lst)
 	    (cond 
-	    	((null? lst) '())
-	    	((null? (cdr lst)) '())
+	    	((null? lst) 
+	    		'())
+	    	((null? (cdr lst)) 
+	    		'())
 	    	(else
 	        	(cons (car lst) (my-remove-last (cdr lst)))
 	        )
@@ -158,7 +163,7 @@
 		(cond
 			((= 0 n) '())
 			(else
-				'()
+				(my-append (list (modulo n 2)) (list(all-bits (- n 1))))
 			)
 		)
 	)
