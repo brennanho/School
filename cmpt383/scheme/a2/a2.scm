@@ -157,13 +157,20 @@
     )
 )
 
+(define insert-all-bits
+	(lambda(x lst)
+		(cons x lst) lst
+	)
+)
+
 ;q11
 (define all-bits
 	(lambda (n)
 		(cond
 			((= 0 n) '())
+			((= 1 n) '((0) (1)))
 			(else
-				(my-append (list (modulo n 2)) (list(all-bits (- n 1))))
+				(my-append '(0) (car(list(all-bits (- n 1)))))
 			)
 		)
 	)
