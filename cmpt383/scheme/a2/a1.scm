@@ -1,5 +1,0 @@
-(define (singleton? x)
-	(cond ((null? (cdr x)) #t)
- 		(else #f)
-	)
-)
