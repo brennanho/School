@@ -11,7 +11,6 @@ int main(void) {
 	struct sockaddr_in siLocal, siRemote;
 	int sLen = sizeof(siRemote);
 
-
 	siLocal.sin_family = AF_INET;
     siLocal.sin_port = htons(8888); // test port
     siLocal.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -22,11 +21,9 @@ int main(void) {
 
 	while (1) {
 
-		printf("Waiting for client data...\n");
-
 		int recvLen = recvfrom(sock, buf, bufLen, 0, (struct sockaddr*) &siRemote, &sLen);
 
-		printf("Client: %s\n", buf);
+		printf("Client: %s", buf);
 
 		sendto(sock, buf, recvLen, 0, (struct sockaddr*) &siRemote, sLen);
 
