@@ -1,0 +1,14 @@
+BASH_BUILTINS(1)                               General Commands Manual                               BASH_BUILTINS(1)
+
+[1mNAME[0m
+       bash,  :,  .,  [,  alias, bg, bind, break, builtin, caller, cd, command, compgen, complete, compopt, continue,
+       declare, dirs, disown, echo, enable, eval, exec, exit, export, false, fc, fg, getopts,  hash,  help,  history,
+       jobs,  kill, let, local, logout, mapfile, popd, printf, pushd, pwd, read, readonly, return, set, shift, shopt,
+       source, suspend, test, times, trap, true, type, typeset, ulimit, umask, unalias, unset, wait -  bash  built-in
+       commands, see [1mbash[22m(1)
+
+[1mBASH BUILTIN COMMANDS[0m
+[1mSEE ALSO[0m
+       bash(1), sh(1)
+
+GNU Bash-4.2                                         2004 Apr 20                                     BASH_BUILTINS(1)
