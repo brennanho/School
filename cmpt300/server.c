@@ -14,11 +14,11 @@ int main(void) {
 	int sLen = sizeof(meClient);
 
 	server.sin_family = AF_INET;
-    server.sin_port = htons(8888); // test port
+    server.sin_port = htons(8886); // test port
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     friendClient.sin_family = AF_INET;
-    friendClient.sin_port = htons(8887); // test port
+    friendClient.sin_port = htons(8888); // test port
     friendClient.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
