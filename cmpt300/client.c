@@ -6,64 +6,69 @@
 #include <string.h>
 #include <pthread.h>
 
-//http://www.binarytides.com/hostname-to-ip-address-c-sockets-linux/
-int hostname_to_ip(char * hostname , char* ip)
-{
-    struct hostent *he;
-    struct in_addr **addr_list;
-    int i;
-         
-    if ( (he = gethostbyname( hostname ) ) == NULL) 
-    {
-        // get the host info
-        herror("gethostbyname");
-        return 1;
+typedef struct sendRecvInfo {
+    int sock;
+    char* msgSend;
+    char* msgRecv;
+    int msgLen;
+    struct sockaddr_in server;
+    int sLen;
+} sendRecvInfo;
+
+void* sendMessage(void* serverInfoptr) {
+    sendRecvInfo serverInfo = *(sendRecvInfo*)serverInfoptr;
+    while (1) {
+        printf("myClient Input: ");
+        fgets(serverInfo.msgSend, sizeof(serverInfo.msgSend), stdin);
+        sendto(serverInfo.sock, serverInfo.msgSend, strlen(serverInfo.msgSend), 0, (struct sockaddr*) &(serverInfo.server), serverInfo.sLen);
     }
- 
-    addr_list = (struct in_addr **) he->h_addr_list;
-     
-    for(i = 0; addr_list[i] != NULL; i++) 
-    {
-        //Return the first one;
-        strcpy(ip , inet_ntoa(*addr_list[i]) );
-        return 0;
-    }
-     
-    return 1;
+    return NULL;
 }
 
-//Client socket testing
+void* recvMessage(void* serverInfoptr) {
+    sendRecvInfo serverInfo = *(sendRecvInfo*)serverInfoptr;
+    while (1) {
+        memset(serverInfo.msgRecv,'\0', serverInfo.msgLen); // clear previous message
+        recvfrom(serverInfo.sock, serverInfo.msgRecv, serverInfo.msgLen, 0, (struct sockaddr*) &(serverInfo.server), &(serverInfo.sLen));
+        printf("Friend's reply: %s", serverInfo.msgRecv);
+    }
+    return NULL;
+}
+
+//myClient socket testing
 int main(int argc, char *argv[]) {
 
-	int bufLen = 1024; 
-	char buf[bufLen];
-	char msg[bufLen];
-    struct sockaddr_in server; // Server info?
-	int sLen = sizeof(server);
+    pthread_t sendThread, recvThread;
+	int msgRecvLen = 1024; 
+	char msgRecv[msgRecvLen];
+	char msg[msgRecvLen];
+    struct sockaddr_in myServer, myClient;
+	int sLen = sizeof(myServer);
 
-	server.sin_family = AF_INET;
-    server.sin_port = htons(8888); // test port
-    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+	myServer.sin_family = AF_INET;
+    myServer.sin_port = htons(8888); // test port
+    myServer.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    myClient.sin_family = AF_INET;
+    myClient.sin_port = htons(8889);
+    myClient.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-	while (connect(sock, (struct sockaddr *) &server, sizeof(server)) == -1); //attemptin to connect to remote machine
+    sendRecvInfo serverInfo = {sock, msg, msgRecv, msgRecvLen, myServer, sLen};
+    void* serverInfoptr = &serverInfo;
+
+    while (!bind(sock, (struct sockaddr*) &myClient, sizeof(myClient)));
+	while (connect(sock, (struct sockaddr *) &(serverInfo.server), sizeof(serverInfo.server)) == -1); //attemptin to connect to remote machine
 
 	printf("Succesfully connected to remote socket\n");
 
-	while (1) {
+    pthread_create(&sendThread, NULL, sendMessage, &serverInfo);
+    pthread_create(&recvThread, NULL, recvMessage, &serverInfo);
 
-		printf("Client Input: ");
-		fgets(msg, sizeof(msg), stdin);
+    pthread_join(sendThread, NULL);
+    pthread_join(recvThread, NULL);
 
-		sendto(sock, msg, strlen(msg), 0, (struct sockaddr*) &server, sLen);
-
-		recvfrom(sock, buf, bufLen, 0, (struct sockaddr*) &server, &sLen);
-
-		printf("Server Reply: %s", buf);
-
-
-	}
 
 	return 0;
 }

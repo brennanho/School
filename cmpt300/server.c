@@ -1,3 +1,4 @@
+#include "list.h"
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdio.h>
@@ -16,6 +17,10 @@ int main(void) {
     server.sin_port = htons(8888); // test port
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
 
+    friendClient.sin_family = AF_INET;
+    friendClient.sin_port = htons(8887); // test port
+    friendClient.sin_addr.s_addr = inet_addr("127.0.0.1");
+
 	int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 	while (!bind(sock, (struct sockaddr*) &server, sizeof(server))); //Attempting to bind socket...
@@ -24,11 +29,16 @@ int main(void) {
 
 	while (1) {
 
-		int recvLen = recvfrom(sock, buf, bufLen, 0, (struct sockaddr*) &friendClient, &sLen);
+		fflush(stdin);
+
+		int recvLen = recvfrom(sock, buf, bufLen, 0, (struct sockaddr*) &meClient, &sLen);
 
 		printf("Client: %s", buf);
 
-		sendto(sock, buf, recvLen, 0, (struct sockaddr*) &meClient, sLen);
+		sendto(sock, buf, recvLen, 0, (struct sockaddr*) &friendClient, sLen);
+		
+		printf("port: %d\n", ntohs(meClient.sin_port));
+		printf("port: %d\n", ntohs(friendClient.sin_port));
 
 	}
 
