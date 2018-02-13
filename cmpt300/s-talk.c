@@ -51,14 +51,14 @@ int main(int argc, char *argv[]) {
 
     myClient.sin_family = AF_INET;
     myClient.sin_port = htons(atoi(myPort)); 
-    myClient.sin_addr.s_addr = INADDR_ANY;
+    myClient.sin_addr.s_addr = INADDR_ANY; // use IP address of my machine
 
-    char friendIP[100] = "\0";
-    hostname_to_ip(remoteComp,friendIP);
+    char remoteIP[100] = "\0";
+    hostname_to_ip(remoteComp,remoteIP);
 
     friendClient.sin_family = AF_INET;
     friendClient.sin_port = htons(atoi(remotePort)); 
-    friendClient.sin_addr.s_addr = inet_addr(friendIP);
+    friendClient.sin_addr.s_addr = inet_addr(remoteIP);
 
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -66,9 +66,9 @@ int main(int argc, char *argv[]) {
 
     while (!bind(sock, (struct sockaddr *) &(myClient), sizeof(myClient))); //Allows for port number to persist through connection
 
-    printf("\nAttempting to connect to %s (IP: %s) on port %s...\n", remoteComp, friendIP, remotePort);
+    printf("\nConnecting to %s (IP: %s) on port %s...\n", remoteComp, remoteIP, remotePort);
     while (connect(sock, (struct sockaddr *) &(friendClient), sizeof(friendClient)) == -1); // keep attempting to connect to remote client
-    printf("\nSuccessfully conneted to %s (IP: %s) on port %s\n\n", remoteComp, friendIP, remotePort);
+    printf("Conneted to %s (IP: %s) on port %s\n\n", remoteComp, remoteIP, remotePort);
 
     pthread_create(&sendThread, NULL, sendMessage, &p2pInfo);
     pthread_create(&recvThread, NULL, recvMessage, &p2pInfo);
@@ -79,6 +79,8 @@ int main(int argc, char *argv[]) {
     pthread_join(recvThread, NULL);
     pthread_join(printScreenThread, NULL);
     pthread_join(keyboardInputThread, NULL);
+
+    close(sock);
 
     return 0;
 }
