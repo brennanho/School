@@ -21,17 +21,6 @@ void* keyboardInput(void* notUsed) { // void* parameter is required under p_thre
     return NULL;
 }
 
-void* printToScreen(void* notUsed) {
-    while (1) {
-        if (ListCount(listRecv) > 0) {
-            char* msg = ListTrim(listRecv); // void* parameter is required under p_thread
-            printf("Friend: %s",msg);
-            memset(msg,'\0', messageSize); // clear previous message
-        }
-    }
-    return NULL;
-}
-
 void* sendMessage(void* p2pInfoPtr) {
     p2pClient p2pInfo = *(p2pClient*)p2pInfoPtr;
     while (1) {
@@ -49,6 +38,17 @@ void* recvMessage(void* p2pInfoPtr) {
         char msgRecv[messageSize];
         recvfrom(p2pInfo.sock, msgRecv, messageSize, 0, (struct sockaddr*) &(p2pInfo.friendClient), &(p2pInfo.sLen));
         ListPrepend(listRecv, msgRecv);
+    }
+    return NULL;
+}
+
+void* printToScreen(void* notUsed) { // void* parameter is required under p_thread
+    while (1) {
+        if (ListCount(listRecv) > 0) {
+            char* msg = ListTrim(listRecv);
+            printf("Friend: %s",msg);
+            memset(msg,'\0', messageSize); // clear previous message
+        }
     }
     return NULL;
 }

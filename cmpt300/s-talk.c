@@ -39,34 +39,36 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in friendClient, myClient;
     int sLen = sizeof(myClient);
 
+    char myPort[1024];
+    char remoteComp[1024];
+    char remotePort[1024];
+    strcpy(myPort, argv[1]);
+    strcpy(remoteComp, argv[2]);
+    strcpy(remotePort, argv[3]);
+
     listRecv = ListCreate();
     listSend = ListCreate();
 
-    char hostname[1023] = "\0";
-    char myIP[100] = "\0";
-    gethostname(hostname, 1023);
-    hostname_to_ip(hostname, myIP);
-
     myClient.sin_family = AF_INET;
-    myClient.sin_port = htons(atoi(argv[1])); //my port
-    myClient.sin_addr.s_addr = inet_addr(myIP);
+    myClient.sin_port = htons(atoi(myPort)); 
+    myClient.sin_addr.s_addr = INADDR_ANY;
 
     char friendIP[100] = "\0";
-    hostname_to_ip(argv[2],friendIP);
+    hostname_to_ip(remoteComp,friendIP);
 
     friendClient.sin_family = AF_INET;
-    friendClient.sin_port = htons(atoi(argv[3])); //remote port (friend)
+    friendClient.sin_port = htons(atoi(remotePort)); 
     friendClient.sin_addr.s_addr = inet_addr(friendIP);
 
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     p2pClient p2pInfo = {sock, friendClient, sLen};
 
-    while (!bind(sock, (struct sockaddr *) &(myClient), sizeof(myClient)));
+    while (!bind(sock, (struct sockaddr *) &(myClient), sizeof(myClient))); //Allows for port number to persist through connection
 
-    printf("\nAttempting to connect to %s on port %s...\n", hostname, argv[3]);
+    printf("\nAttempting to connect to %s (IP: %s) on port %s...\n", remoteComp, friendIP, remotePort);
     while (connect(sock, (struct sockaddr *) &(friendClient), sizeof(friendClient)) == -1); // keep attempting to connect to remote client
-    printf("\nSuccessfully conneted to %s (IP: %s) on port %s\n\n", argv[2], friendIP, argv[3]);
+    printf("\nSuccessfully conneted to %s (IP: %s) on port %s\n\n", remoteComp, friendIP, remotePort);
 
     pthread_create(&sendThread, NULL, sendMessage, &p2pInfo);
     pthread_create(&recvThread, NULL, recvMessage, &p2pInfo);
@@ -77,7 +79,6 @@ int main(int argc, char *argv[]) {
     pthread_join(recvThread, NULL);
     pthread_join(printScreenThread, NULL);
     pthread_join(keyboardInputThread, NULL);
-
 
     return 0;
 }
