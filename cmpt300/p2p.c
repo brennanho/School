@@ -5,27 +5,29 @@
 #include <netdb.h>
 #include <string.h>
 #include <pthread.h>
+#include "p2p.h"
 #include "list.h"
 
-typedef struct p2pClient {
-    int sock;
-    char* msgSend;
-    char* msgRecv;
-    int msgLen;
-    struct sockaddr_in friendClient;
-    int sLen;
-} p2pClient;
+extern LIST* listRecv;
+extern LIST* listSend;
+extern int messageSize;
 
-void* keyboardInput() {
+void* keyboardInput(void* notUsed) { // void* parameter is required under p_thread
     while (1) {
-        
+        char msg[messageSize];
+        fgets(msg, sizeof(msg), stdin);
+        ListPrepend(listSend,msg);
     }
     return NULL;
 }
 
-void* printToScreen() {
+void* printToScreen(void* notUsed) {
     while (1) {
-        
+        if (ListCount(listRecv) > 0) {
+            char* msg = ListTrim(listRecv); // void* parameter is required under p_thread
+            printf("Friend: %s",msg);
+            memset(msg,'\0', messageSize); // clear previous message
+        }
     }
     return NULL;
 }
@@ -33,8 +35,10 @@ void* printToScreen() {
 void* sendMessage(void* p2pInfoPtr) {
     p2pClient p2pInfo = *(p2pClient*)p2pInfoPtr;
     while (1) {
-        fgets(p2pInfo.msgSend, sizeof(p2pInfo.msgSend), stdin);
-        sendto(p2pInfo.sock, p2pInfo.msgSend, strlen(p2pInfo.msgSend), 0, (struct sockaddr*) &(p2pInfo.friendClient), p2pInfo.sLen);
+        if (ListCount(listSend) > 0) {
+            char* msg = ListTrim(listSend);
+            sendto(p2pInfo.sock, msg, messageSize, 0, (struct sockaddr*) &(p2pInfo.friendClient), p2pInfo.sLen);
+        }
     }
     return NULL;
 }
@@ -42,50 +46,9 @@ void* sendMessage(void* p2pInfoPtr) {
 void* recvMessage(void* p2pInfoPtr) {
     p2pClient p2pInfo = *(p2pClient*)p2pInfoPtr;
     while (1) {
-        memset(p2pInfo.msgRecv,'\0', p2pInfo.msgLen); // clear previous message
-        recvfrom(p2pInfo.sock, p2pInfo.msgRecv, p2pInfo.msgLen, 0, (struct sockaddr*) &(p2pInfo.friendClient), &(p2pInfo.sLen));
-        printf("Friend: %s", p2pInfo.msgRecv);
+        char msgRecv[messageSize];
+        recvfrom(p2pInfo.sock, msgRecv, messageSize, 0, (struct sockaddr*) &(p2pInfo.friendClient), &(p2pInfo.sLen));
+        ListPrepend(listRecv, msgRecv);
     }
     return NULL;
-}
-
-LIST* listRecv;
-LIST* listSend;
-
-//p2p UDP socket
-int main(int argc, char *argv[]) {
-
-    pthread_t sendThread, recvThread;
-    int msgRecvLen = 1024; 
-    char msgRecv[msgRecvLen];
-    char msg[msgRecvLen];
-    struct sockaddr_in friendClient, myClient;
-    int sLen = sizeof(myClient);
-
-    listRecv = ListCreate();
-    listSend = ListCreate();
-
-    myClient.sin_family = AF_INET;
-    myClient.sin_port = htons(atoi(argv[1])); //my port
-    myClient.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    friendClient.sin_family = AF_INET;
-    friendClient.sin_port = htons(atoi(argv[2])); //remote port (friend)
-    friendClient.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-    p2pClient p2pInfo = {sock, msg, msgRecv, msgRecvLen, friendClient, sLen};
-
-    while (!bind(sock, (struct sockaddr *) &(myClient), sizeof(myClient))); 
-    while (connect(sock, (struct sockaddr *) &(friendClient), sizeof(friendClient)) == -1); // keep attempting to connect to remote client
-
-    pthread_create(&sendThread, NULL, sendMessage, &p2pInfo);
-    pthread_create(&recvThread, NULL, recvMessage, &p2pInfo);
-
-    pthread_join(sendThread, NULL);
-    pthread_join(recvThread, NULL);
-
-
-    return 0;
 }
