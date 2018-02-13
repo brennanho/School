@@ -5,6 +5,7 @@
 #include <netdb.h>
 #include <string.h>
 #include <pthread.h>
+#include "list.h"
 
 typedef struct p2pClient {
     int sock;
@@ -14,6 +15,20 @@ typedef struct p2pClient {
     struct sockaddr_in friendClient;
     int sLen;
 } p2pClient;
+
+void* keyboardInput() {
+    while (1) {
+        
+    }
+    return NULL;
+}
+
+void* printToScreen() {
+    while (1) {
+        
+    }
+    return NULL;
+}
 
 void* sendMessage(void* p2pInfoPtr) {
     p2pClient p2pInfo = *(p2pClient*)p2pInfoPtr;
@@ -29,12 +44,15 @@ void* recvMessage(void* p2pInfoPtr) {
     while (1) {
         memset(p2pInfo.msgRecv,'\0', p2pInfo.msgLen); // clear previous message
         recvfrom(p2pInfo.sock, p2pInfo.msgRecv, p2pInfo.msgLen, 0, (struct sockaddr*) &(p2pInfo.friendClient), &(p2pInfo.sLen));
-        printf("Friend's reply: %s", p2pInfo.msgRecv);
+        printf("Friend: %s", p2pInfo.msgRecv);
     }
     return NULL;
 }
 
-//p2p UDP socket testing
+LIST* listRecv;
+LIST* listSend;
+
+//p2p UDP socket
 int main(int argc, char *argv[]) {
 
     pthread_t sendThread, recvThread;
@@ -44,20 +62,23 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in friendClient, myClient;
     int sLen = sizeof(myClient);
 
+    listRecv = ListCreate();
+    listSend = ListCreate();
+
     myClient.sin_family = AF_INET;
-    myClient.sin_port = htons(8887);
+    myClient.sin_port = htons(atoi(argv[1])); //my port
     myClient.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     friendClient.sin_family = AF_INET;
-    friendClient.sin_port = htons(8889);
+    friendClient.sin_port = htons(atoi(argv[2])); //remote port (friend)
     friendClient.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     p2pClient p2pInfo = {sock, msg, msgRecv, msgRecvLen, friendClient, sLen};
 
-    while (!bind(sock, (struct sockaddr *) &(myClient), sizeof(myClient)));
-    while (connect(sock, (struct sockaddr *) &(friendClient), sizeof(friendClient)) == -1);
+    while (!bind(sock, (struct sockaddr *) &(myClient), sizeof(myClient))); 
+    while (connect(sock, (struct sockaddr *) &(friendClient), sizeof(friendClient)) == -1); // keep attempting to connect to remote client
 
     pthread_create(&sendThread, NULL, sendMessage, &p2pInfo);
     pthread_create(&recvThread, NULL, recvMessage, &p2pInfo);
