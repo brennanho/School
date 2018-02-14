@@ -5,6 +5,7 @@
 #include <netdb.h>
 #include <string.h>
 #include <pthread.h>
+#include <ctype.h>
 #include "p2p.h"
 #include "list.h"
 
@@ -12,11 +13,23 @@ extern LIST* listRecv;
 extern LIST* listSend;
 extern int messageSize;
 
+//code from https://stackoverflow.com/questions/3981510/getline-check-if-line-is-whitespace, helper for keyboardInput
+int is_empty(const char *s) {
+  while (*s != '\0') {
+    if (!isspace((unsigned char)*s))
+      return 0;
+    s++;
+  }
+  return 1;
+}
+
 void* keyboardInput(void* notUsed) { // void* parameter is required under p_thread
     while (1) {
+        //fputs("You: ", stdout);
         char msg[messageSize];
         fgets(msg, sizeof(msg), stdin);
-        ListPrepend(listSend,msg);
+        if (!is_empty(msg)) //If user inputed something i.e. atleast one non-whitespace char, add it to the send queue
+            ListPrepend(listSend,msg);
     }
     return NULL;
 }
