@@ -36,7 +36,7 @@ int hostname_to_ip(char * hostname, char* ip)
 int main(int argc, char *argv[]) {
 
     pthread_t sendThread, recvThread, printScreenThread, keyboardInputThread;
-    struct sockaddr_in friendClient, myClient;
+    struct sockaddr_in remoteClient, myClient;
     int sLen = sizeof(myClient);
 
     char myPort[1024];
@@ -56,25 +56,27 @@ int main(int argc, char *argv[]) {
     char remoteIP[100] = "\0";
     hostname_to_ip(remoteComp,remoteIP);
 
-    friendClient.sin_family = AF_INET;
-    friendClient.sin_port = htons(atoi(remotePort)); 
-    friendClient.sin_addr.s_addr = inet_addr(remoteIP);
+    remoteClient.sin_family = AF_INET;
+    remoteClient.sin_port = htons(atoi(remotePort)); 
+    remoteClient.sin_addr.s_addr = inet_addr(remoteIP);
 
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-    p2pClient p2pInfo = {sock, friendClient, sLen};
+    p2pClient p2pInfo = {sock, remoteClient, remoteComp, sLen};
 
     while (!bind(sock, (struct sockaddr *) &(myClient), sizeof(myClient))); //Allows for port number to persist through connection
 
     printf("\nConnecting to %s (IP: %s) on port %s...\n", remoteComp, remoteIP, remotePort);
-    while (connect(sock, (struct sockaddr *) &(friendClient), sizeof(friendClient)) == -1); // keep attempting to connect to remote client
+    while (connect(sock, (struct sockaddr *) &(remoteClient), sizeof(remoteClient)) == -1); // keep attempting to connect to remote client
     printf("Conneted to %s (IP: %s) on port %s\n\n", remoteComp, remoteIP, remotePort);
 
+    //Spawn the four threads required for A2
     pthread_create(&sendThread, NULL, sendMessage, &p2pInfo);
     pthread_create(&recvThread, NULL, recvMessage, &p2pInfo);
-    pthread_create(&printScreenThread, NULL, printToScreen, NULL);
+    pthread_create(&printScreenThread, NULL, printToScreen, &p2pInfo);
     pthread_create(&keyboardInputThread, NULL, keyboardInput, NULL);
 
+    //Force main thread to wait for all background threads to finish
     pthread_join(sendThread, NULL);
     pthread_join(recvThread, NULL);
     pthread_join(printScreenThread, NULL);

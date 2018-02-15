@@ -1,6 +1,7 @@
 typedef struct p2pClient {
     int sock;
-    struct sockaddr_in friendClient;
+    struct sockaddr_in remoteClient;
+    char* remoteCompName;
     int sLen;
 } p2pClient;
 
