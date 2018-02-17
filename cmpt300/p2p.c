@@ -59,9 +59,9 @@ void* sendMessage(void* p2pInfoPtr) {
 
         pthread_mutex_lock(&sendMutex);
         //Start of critical section i.e. listSend is a shared resource in memory
-        if (ListCount(listSend) > 0) { // ListCount(listSend) is a condition variable used to check whether there are messages waiting to be sent
+        if (ListCount(listSend) > 0) {
             char* msg = ListTrim(listSend);
-            sendto(p2pInfo.sock, msg, messageSize, 0, (struct sockaddr*) &(p2pInfo.remoteClient), p2pInfo.sLen);
+            sendto(p2pInfo.sock, msg, messageSize, 0, (struct sockaddr*) &(p2pInfo.remoteClient), p2pInfo.addrLen);
         }
         //End of critical section
         pthread_mutex_unlock(&sendMutex);
@@ -75,7 +75,7 @@ void* recvMessage(void* p2pInfoPtr) {
     while (1) {
         
         char msgRecv[messageSize];
-        recvfrom(p2pInfo.sock, msgRecv, messageSize, 0, (struct sockaddr*) &(p2pInfo.remoteClient), &(p2pInfo.sLen));
+        recvfrom(p2pInfo.sock, msgRecv, messageSize, 0, (struct sockaddr*) &(p2pInfo.remoteClient), &(p2pInfo.addrLen));
 
         pthread_mutex_lock(&recvMutex);
         //Start of critical section i.e. listRecv is a shared resource in memory
@@ -93,7 +93,7 @@ void* printToScreen(void* p2pInfoPtr) {
 
         pthread_mutex_lock(&recvMutex);
         //Start of critical section i.e. listRecv is a shared resource in memory
-        if (ListCount(listRecv) > 0) { // ListCount(listRecv) is a condition variable used to check whether there are messages waiting to be print to the screen
+        if (ListCount(listRecv) > 0) { 
             char* msg = ListTrim(listRecv);
 
             if (msg[0] == '!') {
@@ -102,7 +102,7 @@ void* printToScreen(void* p2pInfoPtr) {
                 exit(0);
             }
 
-            printf("Remote: %s",msg);
+            printf("%s: %s", p2pInfo.remoteCompName, msg);
             memset(msg,'\0', messageSize); // clear previous message
         }
         //End of critical section

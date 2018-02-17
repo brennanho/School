@@ -2,14 +2,14 @@ typedef struct p2pClient {
     int sock;
     struct sockaddr_in remoteClient;
     char* remoteCompName;
-    int sLen;
+    int addrLen;
 } p2pClient;
 
-//Thread 1: Wait for keyboard input from client 
-void* keyboardInput(void* nothing);
+//Thread 1: Wait for keyboard input from you the client 
+void* keyboardInput(void* notUsed); //void * parameter required for p_thread protocol 
 
 //Thread 2: When there are messages to print from the queue, print them
-void* printToScreen(void* nothing);
+void* printToScreen(void* p2pInfoPtr);
 
 //Thread 3: When there are messages to send from the queue, send them
 void* sendMessage(void* p2pInfoPtr);
