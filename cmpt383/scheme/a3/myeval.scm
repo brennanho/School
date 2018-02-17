@@ -1,5 +1,3 @@
-(load "env1.scm")
-
 (define last-of-expr
   (lambda(expr)
     (cond
@@ -14,22 +12,17 @@
   )
 )
 
-;Checks if there any subexpressions in an expression
-(define no-subexpr
+(define no-subexpr?
   (lambda (expr)
     (cond
-      ((null? expr) 
+      ( (and (not (list? (car expr))) (not (list? (cadr expr))) (not (list? (last-of-expr expr))))
         #t)
-      ((list? (car expr))
-        #f)
       (else
-        (no-subexpr (cdr expr))
-      )
+        #f)
     )
   )
 )
 
-;Evaluates an infix expression e.g (1 + 1)
 (define eval-expr
     (lambda (expr)
       (cond
@@ -51,10 +44,24 @@
     )
 )
 
-(define is-operator
-  (lambda (sym)
+(define replace-v-val
+  (lambda (env v)
     (cond
-      ((or (eq? sym '+) (eq? sym '-) (eq? sym '*) (eq? sym '/) (eq? sym '**) (eq? sym 'inc) (eq? sym 'dec))
+      ((null? v)
+        v)
+      ((or (eq? (car v) '+) (eq? (car v) '-) (eq? (car v) '*) (eq? (car v) '/) (eq? (car v) '**) (eq? (car v) 'inc) (eq? (car v) 'dec) (number? (car v)))
+          (cons (car v) (replace-v-val env (cdr v))))
+      (else
+        (cons (apply-env env (car v)) (replace-v-val env (cdr v)))
+      )
+    )
+  )
+)
+
+(define is-operator
+  (lambda (x)
+    (cond
+      ((or (eq? x '+) (eq? x '-) (eq? x '/) (eq? x '*) (eq? x '**) (eq? x 'inc) (eq? x 'dec))
         #t)
       (else
         #f
@@ -62,12 +69,27 @@
     )
   )
 )
+; )
+
+(define replace-v-val-nested
+  (lambda (env v)
+    (cond
+      ((no-subexpr? v)
+        (replace-v-val env v))
+      ((list? (car v))
+        (list (replace-v-val-nested env (car v)) (cadr v) (last-of-expr v)))
+      (else
+        (list (car v) (cadr v) (replace-v-val-nested env (last-of-expr v)))
+      )
+    )  
+  )  
+)
 
 ;Evaluates nested infix expressions e.g. (1 + (1 / 2))
 (define eval-nested
   (lambda (expr)
     (cond
-        ((no-subexpr expr) 
+        ((no-subexpr? expr) 
           (eval-expr expr))
         ((= (length expr) 2)
           (eval-expr (list (car expr) (eval-nested (cadr expr)))))
@@ -82,21 +104,8 @@
   )
 )
 
-(define (deep-map f l)
-  (define (deep x)
-    (cond ((null? x) x)
-          ((pair? x) (map deep x))
-          (else (f x))))
-  (map deep l))
-
-; (define replace-v-val
-;   (lambda (expr)
-
-;   )
-; )
-
-; (define myeval
-;   (lambda (expr env)
-
-;   )
-; )
+(define myeval
+  (lambda (expr env)
+    (eval-nested (replace-v-val-nested env expr))
+  )
+)
