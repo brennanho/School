@@ -34,11 +34,13 @@ int hostname_to_ip(char * hostname, char* ip)
 //s-talk program main
 int main(int argc, char *argv[]) {
 
+    //Client must enter in the correct format and number of arguments to launch s-talk successfully
     if (argc != 4) {
         printf("\nPlease enter with the format: 's-talk [my port number] [remote machine name] [remote port number]'\n");
         exit(1);
     }
 
+    //Assigning command-line arguments to more appropriate variable names
     char myPort[1024];
     char remoteComp[1024];
     char remotePort[1024];
@@ -50,6 +52,7 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in remoteClient, myClient;
     int addrLen = sizeof(remoteClient);
 
+    //Shared resources amongst the 4 different threads
     listRecv = ListCreate();
     listSend = ListCreate();
 

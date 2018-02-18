@@ -10,13 +10,16 @@
 #include "p2p.h"
 #include "list.h"
 
+//Shared resources generated in s-talk
 extern LIST* listRecv;
 extern LIST* listSend;
 extern int messageSize;
 
-//Mutexes used for both recvList and sendList to allow for synchronization 
+//Mutexes and condition variables used for both recvList and sendList to enable synchronization 
 pthread_mutex_t sendMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t recvMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t sendCond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t recvCond = PTHREAD_COND_INITIALIZER;
 
 //Helper function to check if message to send contains any information i.e. has atleast one non-whitespace character
 int is_empty(const char *str) {
@@ -39,9 +42,10 @@ void* keyboardInput(void* notUsed) { // void* parameter is required under p_thre
             //Start of critical section i.e. listSend is a shared resource in memory
             ListPrepend(listSend,msg);
             //End of critical section
+            pthread_cond_signal(&sendCond);
             pthread_mutex_unlock(&sendMutex);
 
-            if (strlen(msg) == 2 && msg[0] == '!') {
+            if (strlen(msg) == 2 && msg[0] == '!') { //If one client enters in "!", the s-talk session will terminate
                 printf("\nClosing s-talk session...\n");
                 sleep(1);
                 exit(0);
@@ -58,6 +62,10 @@ void* sendMessage(void* p2pInfoPtr) {
     while (1) {
 
         pthread_mutex_lock(&sendMutex);
+
+        while (!sendCond)
+            pthread_cond_wait(&sendCond, &sendMutex);
+
         //Start of critical section i.e. listSend is a shared resource in memory
         if (ListCount(listSend) > 0) {
             char* msg = ListTrim(listSend);
@@ -81,6 +89,7 @@ void* recvMessage(void* p2pInfoPtr) {
         //Start of critical section i.e. listRecv is a shared resource in memory
         ListPrepend(listRecv, msgRecv);
         //End of critical section
+        pthread_cond_signal(&recvCond);
         pthread_mutex_unlock(&recvMutex);
 
     }
@@ -92,12 +101,17 @@ void* printToScreen(void* p2pInfoPtr) {
     while (1) {
 
         pthread_mutex_lock(&recvMutex);
+
+        while (!recvCond)
+            pthread_cond_wait(&recvCond, &recvMutex);
+
         //Start of critical section i.e. listRecv is a shared resource in memory
         if (ListCount(listRecv) > 0) { 
             char* msg = ListTrim(listRecv);
 
             if (msg[0] == '!') {
                 printf("\n%s has closed the s-talk session...\n", p2pInfo.remoteCompName);
+                close(p2pInfo.sock);
                 sleep(1);
                 exit(0);
             }
