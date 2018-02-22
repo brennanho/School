@@ -5,6 +5,9 @@ typedef struct p2pClient {
     int addrLen;
 } p2pClient;
 
+//Helper function to convert hostname to IP address
+int hostname_to_ip(char * hostname, char* ip);
+
 //Thread 1: Wait for keyboard input from you the client 
 void* keyboardInput(void* notUsed); //void * parameter required for p_thread protocol 
 

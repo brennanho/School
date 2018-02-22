@@ -21,6 +21,25 @@ pthread_mutex_t recvMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t sendCond = PTHREAD_COND_INITIALIZER;
 pthread_cond_t recvCond = PTHREAD_COND_INITIALIZER;
 
+//helper function to convert hostname to IP address
+int hostname_to_ip(char * hostname, char* ip)
+{
+    struct hostent *he;
+    struct in_addr **addr_list;
+
+    he = gethostbyname(hostname);
+    printf("%d",he);
+    addr_list = (struct in_addr **) he->h_addr_list;
+     
+    if (addr_list[0] != NULL) // get the first IP address in the list
+    {
+        strcpy(ip , inet_ntoa(*addr_list[0]) );
+        return 0;
+    }
+     
+    return 1;
+}
+
 //Helper function to check if message to send contains any information i.e. has atleast one non-whitespace character
 int is_empty(const char *str) {
   while (*str != '\0') {
@@ -40,6 +59,10 @@ void* keyboardInput(void* notUsed) { // void* parameter is required under p_thre
         {   
             pthread_mutex_lock(&sendMutex);
             //Start of critical section i.e. listSend is a shared resource in memory
+            
+            if (ListCount(listSend) == nodesArrSize/2) // listSend gets half the capacity of available nodes
+                pthread_cond_wait(&sendCond, &sendMutex);
+
             ListPrepend(listSend,msg);
             //End of critical section
             pthread_cond_signal(&sendCond); //Signals sendMessage to resume thread
@@ -69,6 +92,7 @@ void* sendMessage(void* p2pInfoPtr) {
 
         char* msg = ListTrim(listSend);
         //End of critical section
+        pthread_cond_signal(&sendCond); //Signals keyboardInput to resume thread
         pthread_mutex_unlock(&sendMutex);
 
         sendto(p2pInfo.sock, msg, messageSize, 0, (struct sockaddr*) &(p2pInfo.remoteClient), p2pInfo.addrLen);
@@ -86,6 +110,10 @@ void* recvMessage(void* p2pInfoPtr) {
 
         pthread_mutex_lock(&recvMutex);
         //Start of critical section i.e. listRecv is a shared resource in memory
+
+        if (ListCount(listRecv) == nodesArrSize/2) //listRecv gets half the capacity of available nodes
+            pthread_cond_wait(&recvCond, &recvMutex);
+
         ListPrepend(listRecv, msgRecv);
         //End of critical section
         pthread_cond_signal(&recvCond); // Signals sendMessage to resume thread 
@@ -107,6 +135,7 @@ void* printToScreen(void* p2pInfoPtr) {
 
         char* msg = ListTrim(listRecv);
         //End of critical section
+        pthread_cond_signal(&recvCond); // Signals recvMessage to resume thread
         pthread_mutex_unlock(&recvMutex); 
 
         if (msg[0] == '!') { // If remote client enters in "!", the s-talk session will close 

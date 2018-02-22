@@ -1,4 +1,4 @@
-#define headsArrSize 10
+#define headsArrSize 2
 #define nodesArrSize 500
 
 //Node container with a type "data" item

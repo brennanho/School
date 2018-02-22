@@ -13,24 +13,6 @@ LIST* listRecv;
 LIST* listSend;
 size_t messageSize = 1024;
 
-//helper function to convert hostname to IP address
-int hostname_to_ip(char * hostname, char* ip)
-{
-    struct hostent *he;
-    struct in_addr **addr_list;
-
-    he = gethostbyname(hostname);
-    addr_list = (struct in_addr **) he->h_addr_list;
-     
-    if (addr_list[0] != NULL) // get the first IP address in the list
-    {
-        strcpy(ip , inet_ntoa(*addr_list[0]) );
-        return 0;
-    }
-     
-    return 1;
-}
-
 //s-talk program main
 int main(int argc, char *argv[]) {
 
@@ -76,6 +58,7 @@ int main(int argc, char *argv[]) {
     printf("\nConnecting to %s (IP: %s) on port %s...\n", remoteComp, remoteIP, remotePort);
     while (connect(sock, (struct sockaddr *) &(remoteClient), sizeof(remoteClient)) == -1);
     printf("Conneted to %s (IP: %s) on port %s\n\n", remoteComp, remoteIP, remotePort);
+    printf("-----------------Welcome to S-Talk-----------------\n\n");
 
     p2pClient p2pInfo = {sock, remoteClient, remoteComp, addrLen}; // Struct that will contain all the necassary UDP socket info requried in the threads
 
