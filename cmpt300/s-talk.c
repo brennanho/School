@@ -12,6 +12,7 @@
 LIST* listRecv;
 LIST* listSend;
 size_t messageSize = 1024;
+pthread_t sendThread, recvThread, printScreenThread, keyboardInputThread;
 
 //s-talk program main
 int main(int argc, char *argv[]) {
@@ -30,7 +31,6 @@ int main(int argc, char *argv[]) {
     strcpy(remoteComp, argv[2]);
     strcpy(remotePort, argv[3]);
 
-    pthread_t sendThread, recvThread, printScreenThread, keyboardInputThread;
     struct sockaddr_in remoteClient, myClient;
     int addrLen = sizeof(remoteClient);
 
@@ -75,6 +75,8 @@ int main(int argc, char *argv[]) {
     pthread_join(keyboardInputThread, NULL);
 
     close(sock);
+
+    printf("\nAll threads closed gracefully...\n");
 
     return 0;
 }

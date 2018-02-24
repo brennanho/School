@@ -14,6 +14,7 @@
 extern LIST* listRecv;
 extern LIST* listSend;
 extern int messageSize;
+extern pthread_t sendThread, recvThread, printScreenThread, keyboardInputThread;
 
 //Mutexes and condition variables used for both recvList and sendList to enable synchronization 
 pthread_mutex_t sendMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -28,7 +29,6 @@ int hostname_to_ip(char * hostname, char* ip)
     struct in_addr **addr_list;
 
     he = gethostbyname(hostname);
-    printf("%d",he);
     addr_list = (struct in_addr **) he->h_addr_list;
      
     if (addr_list[0] != NULL) // get the first IP address in the list
@@ -51,6 +51,7 @@ int is_empty(const char *str) {
 }
 
 void* keyboardInput(void* notUsed) { // void* parameter is required under p_thread
+    
     while (1) {
         char msg[messageSize];
         fgets(msg, sizeof(msg), stdin);
@@ -71,7 +72,10 @@ void* keyboardInput(void* notUsed) { // void* parameter is required under p_thre
             if (strlen(msg) == 2 && msg[0] == '!') { //If local client enters in "!", the s-talk session will terminate
                 printf("\nClosing s-talk session...\n");
                 sleep(1);
-                exit(0);
+                pthread_cancel(sendThread);
+                pthread_cancel(recvThread);
+                pthread_cancel(printScreenThread);
+                pthread_exit(NULL);
             }
 
         }
@@ -140,9 +144,11 @@ void* printToScreen(void* p2pInfoPtr) {
 
         if (msg[0] == '!') { // If remote client enters in "!", the s-talk session will close 
             printf("\n%s has closed the s-talk session...\n", p2pInfo.remoteCompName);
-            close(p2pInfo.sock);
             sleep(1);
-            exit(0);
+            pthread_cancel(keyboardInputThread);
+            pthread_cancel(sendThread);
+            pthread_cancel(recvThread);
+            pthread_exit(NULL);
         }
 
         printf("%s: %s", p2pInfo.remoteCompName, msg);
