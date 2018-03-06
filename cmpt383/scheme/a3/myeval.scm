@@ -1,3 +1,6 @@
+(load "env2.scm")
+
+;HELPER - Returns the last value of an expression e.g. returns 3 if the expression is (x + 3) or 2 if the expression is inc 2
 (define last-of-expr
   (lambda(expr)
     (cond
@@ -12,6 +15,7 @@
   )
 )
 
+;HELPER - Checks whether an expression contains any subexpressions, returns a boolean value
 (define no-subexpr?
   (lambda (expr)
     (cond
@@ -23,6 +27,7 @@
   )
 )
 
+;HELPER - Evaluates an expression that does not contain any subexpressions e.g. (2 * x)
 (define eval-expr
     (lambda (expr)
       (cond
@@ -44,6 +49,7 @@
     )
 )
 
+;HELPER - Replaces all variable names in an expression with their associated values from their environment e.g. if x = 3, then (3 + x) will be converted to (3 + 3)
 (define replace-v-val
   (lambda (env v)
     (cond
@@ -58,19 +64,7 @@
   )
 )
 
-(define is-operator
-  (lambda (x)
-    (cond
-      ((or (eq? x '+) (eq? x '-) (eq? x '/) (eq? x '*) (eq? x '**) (eq? x 'inc) (eq? x 'dec))
-        #t)
-      (else
-        #f
-      )
-    )
-  )
-)
-; )
-
+;HELPER - Same as the above replace-v-val function except is used for a more general case with nested expressions
 (define replace-v-val-nested
   (lambda (env v)
     (cond
@@ -85,7 +79,7 @@
   )  
 )
 
-;Evaluates nested infix expressions e.g. (1 + (1 / 2))
+;HELPER - Evaluates nested infix expressions e.g. (1 + (1 / 2))
 (define eval-nested
   (lambda (expr)
     (cond
@@ -104,6 +98,7 @@
   )
 )
 
+;Required for part 2
 (define myeval
   (lambda (expr env)
     (eval-nested (replace-v-val-nested env expr))

@@ -1,5 +1,6 @@
 (load "myeval.scm")
 
+;HELPER - Simplifies an expression that contains no subexpressions e.g. (a + 0)
 (define simplify-base
   (lambda (expr)
     (cond
@@ -42,17 +43,27 @@
   )  
 )
 
+;Required for part 3
 (define simplify
   (lambda (expr)
     (cond
+      ;No sub expression, evaluate expression as is
       ((no-subexpr? expr)
-        (simplify-base expr))
-      ((= (length expr) 2)
+        (simplify-base expr)) 
+
+      ;Expression contains a subexpression but is of form dec or inc e.g. (inc (3 + x))
+      ((= (length expr) 2) 
           (simplify-base (list (car expr) (simplify (cadr expr)))))
-      ((and (list? (car expr)) (list? (last-of-expr expr)))
+
+      ;If both operands are subexpressions e.g. ((3 + x) + (3 * y))
+      ((and (list? (car expr)) (list? (last-of-expr expr))) 
           (simplify-base (list (simplify (car expr)) (cadr expr) (simplify (last-of-expr expr)))))
+      
+      ;If left operand is a subexpression e.g. ((3 + x) * 2)
       ((list? (car expr))
           (simplify-base (list (simplify (car expr)) (cadr expr) (last-of-expr expr))))
+      
+      ;Right operand is a subexpression e.g. (2 * (3 + x))
       (else
           (simplify-base (list (car expr) (cadr expr) (simplify (last-of-expr expr))))
       )
