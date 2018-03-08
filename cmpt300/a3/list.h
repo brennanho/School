@@ -1,4 +1,4 @@
-#define headsArrSize 4
+#define headsArrSize 5
 #define nodesArrSize 500
 
 //Node container with a type "data" item
@@ -75,6 +75,7 @@ void *ListTrim(LIST* list);
 
 //Used for ListSearch
 int comparator(void* item, void* comparisonArg);
+int comparator2(void* item, void* comparisonArg);
 
 /*searches list starting at the current item until the end is reached or a match is
 found. In this context, a match is determined by the comparator parameter. This

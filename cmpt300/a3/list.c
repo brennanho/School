@@ -79,6 +79,14 @@ int comparator(void* item, void* comparisonArg) {
 	return 0;
 }
 
+int comparator2(void* item, void* comparisonArg) {
+	Message* myItem = (Message*)item;
+	int id = myItem->toID;
+	if (id == *(int*)comparisonArg)
+		return 1;
+	return 0;
+}
+
 //Returns used nodes to node stack pool 
 void itemFree(void* itemToBeFreed) {
 	if (nodesStack->size == 0) {

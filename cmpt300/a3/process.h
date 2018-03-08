@@ -3,9 +3,18 @@ typedef struct PCB {
 	int id;
 	int priority;
 	int running;
-	char* procMessage;
+	int burstTime;
+	char* msg;
 
 } PCB;
+
+typedef struct Message {
+
+	int fromID;
+	int toID;
+	char* msg;
+
+} Message;
 
 typedef struct Semaphore {
 

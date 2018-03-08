@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 #include "list.h"
 #include "process.h"
 
@@ -9,9 +10,11 @@ LIST* readyQHIGH;
 LIST* readyQMED;
 LIST* readyQLOW;
 LIST* blockedList;
-PCB runningProc;
-PCB initProc;
+LIST* messageList;
+PCB* runningProc;
+PCB* initProc;
 int idCount = 0;
+int quantum = 5;
 
 void inputCommands(void) {
 	
@@ -23,7 +26,7 @@ void inputCommands(void) {
 		char cmd[cmdSize];
 		char param[paramSize];
 		char msg[msgSize];
-		printf("Command: ");
+		printf("\nCommand: ");
         fgets(cmd, cmdSize, stdin);
  
         
@@ -41,7 +44,7 @@ void inputCommands(void) {
 		    	}
 
 	    	} else if (cmd[0] == 'f' || cmd[0] == 'F') {
-	    		printf("Command: Fork\n");
+	    		printf("\nForking process (ID: %d)\n", runningProc->id);
 	    		Fork();
 
 	    	} else if (cmd[0] == 'k' || cmd[0] == 'K') {
@@ -56,7 +59,8 @@ void inputCommands(void) {
 	    		Exit();
 
 	    	} else if (cmd[0] == 'q' || cmd[0] == 'Q') {
-	    		printf("Command: Quantum\n");
+	    		printf("Quantum - CPU time expired\n");
+	    		Quantum();
 
 	    	} else if (cmd[0] == 's' || cmd[0] == 'S') {
 	    		printf("Send - Please enter the ID of the process to send (blocking)\n");
@@ -66,12 +70,9 @@ void inputCommands(void) {
 	    		fgets(msg, msgSize, stdin);
 	    		Send(id,msg);
 
-
-
-	    		Send(0,NULL);
-
 	    	} else if (cmd[0] == 'r' || cmd[0] == 'R') {
-	    		printf("Command: Receive\n");
+	    		printf("Receive: currenty process will block\n");
+	    		Receive();
 
 	    	} else if (cmd[0] == 'y' || cmd[0] == 'Y') {
 	    		printf("Command: Reply\n");
@@ -86,10 +87,12 @@ void inputCommands(void) {
 	    		printf("Command: Semaphore V\n");
 
 	    	} else if (cmd[0] == 'i' || cmd[0] == 'I') {
-	    		printf("Command: Process Info\n");
+	    		printf("\nProcess Info - Please enter the ID of the process to retrieve info\n");
+	    		fgets(param, paramSize, stdin);
+	    		int id = atoi(param);
+	    		ProcessInfo(id);
 
 	    	} else if (cmd[0] == 't' || cmd[0] == 'T') {
-	    		printf("\nPrinting all system process info...\n");
 	    		TotalInfo();
 
 	    	} else {
@@ -107,16 +110,30 @@ void inputCommands(void) {
 
 int main(void) {
 
-
+	srand(time(0)); //To randomly generate arbitray burst times (1 - 10 units)
 	readyQHIGH = ListCreate();
 	readyQMED = ListCreate();
 	readyQLOW = ListCreate();
 	blockedList = ListCreate();
+	messageList = ListCreate();
+	
+	//Initial process that will be the last to terminate at the end of the simulation
+	initProc = malloc(sizeof* initProc);
+	initProc->id = 0;
+	initProc->priority = 0;
+	initProc->running = 1;
 
-	PCB runningProc = {idCount++,0,1,NULL};
-	initProc = runningProc;
+	//Currently running process, initially will be the same as initProc
+	runningProc = malloc(sizeof* runningProc);
+	runningProc->id = idCount++;
+	runningProc->priority = 0;
+	runningProc->running = 1;
+	runningProc->burstTime = (rand() % 10) + 1;
 
 	inputCommands();
+
+	free(runningProc);
+	free(initProc);
 	
 	return 0;
 
