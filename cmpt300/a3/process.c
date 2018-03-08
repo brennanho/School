@@ -6,6 +6,7 @@
 extern LIST* readyQHIGH;
 extern LIST* readyQMED;
 extern LIST* readyQLOW;
+extern LIST* blockedList;
 extern PCB runningProc;
 extern int idCount;
 
@@ -21,7 +22,6 @@ void addToReadyQ(PCB* proc) {
 }
 
 PCB* killProcessFromQ(int pid) {
-	PCB* process = NULL;
 	int* pidArg = malloc(sizeof* pidArg);
 	*pidArg = pid;
 
@@ -34,6 +34,26 @@ PCB* killProcessFromQ(int pid) {
 	} else if (ListSearch(readyQLOW,comparator,pidArg) != NULL){
 		free(pidArg);
 		return ListRemove(readyQLOW);
+	}
+
+	free(pidArg);
+	return NULL;
+}
+
+PCB* getProcessFromQ(int pid) {
+	PCB* process;
+	int* pidArg = malloc(sizeof* pidArg);
+	*pidArg = pid;
+
+	if ((process = ListSearch(readyQHIGH,comparator,pidArg)) != NULL) {
+		free(pidArg);
+		return process;
+	} else if ((process = ListSearch(readyQMED,comparator,pidArg)) != NULL) {
+		free(pidArg);
+		return process;
+	} else if ((process = ListSearch(readyQLOW,comparator,pidArg)) != NULL){
+		free(pidArg);
+		return process;
 	}
 
 	free(pidArg);
@@ -119,6 +139,7 @@ void Exit(void) {
 	runningProc.id = nextProc->id;
 	runningProc.procMessage = nextProc->procMessage;
 	runningProc.priority = nextProc->priority;
+	free(nextProc);
 	printf("New process (ID: %d) is now running\n",runningProc.id);
 }
 
@@ -128,6 +149,27 @@ void Quantum(void) {
 
 
 void Send(int pid, char* msg) {
+	PCB* blockedProc = malloc(sizeof* blockedProc);
+	blockedProc->id = runningProc.id;
+	blockedProc->procMessage = runningProc.procMessage;
+	blockedProc->priority = runningProc.priority;
+	blockedProc->running = 0; 
+	ListPrepend(blockedList,blockedProc);
+
+	PCB* sendTo = getProcessFromQ(pid);
+	if (sendTo == NULL)
+		return;
+	
+	sendTo->procMessage = msg;
+
+	PCB* nextProc = getNextProcess();
+	if (nextProc == NULL)
+		return;
+
+	runningProc.id = nextProc->id;
+	runningProc.procMessage = nextProc->procMessage;
+	runningProc.priority = nextProc->priority;
+	runningProc.running = 1;
 
 }
 
@@ -166,5 +208,7 @@ void TotalInfo(void) {
 	printQ(readyQMED);
 	printf("\nReady Queue 2:\n");
 	printQ(readyQLOW);
+	printf("\nBlocked Processes:\n");
+	printQ(blockedList);
 	printf("\n");
 }

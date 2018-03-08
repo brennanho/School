@@ -8,6 +8,7 @@
 LIST* readyQHIGH;
 LIST* readyQMED;
 LIST* readyQLOW;
+LIST* blockedList;
 PCB runningProc;
 PCB initProc;
 int idCount = 0;
@@ -18,8 +19,10 @@ void inputCommands(void) {
 
 		int cmdSize = 4;
 		int paramSize = 4;
+		int msgSize = 40;
 		char cmd[cmdSize];
 		char param[paramSize];
+		char msg[msgSize];
 		printf("Command: ");
         fgets(cmd, cmdSize, stdin);
  
@@ -56,7 +59,16 @@ void inputCommands(void) {
 	    		printf("Command: Quantum\n");
 
 	    	} else if (cmd[0] == 's' || cmd[0] == 'S') {
-	    		printf("Command: Send\n");
+	    		printf("Send - Please enter the ID of the process to send (blocking)\n");
+	    		fgets(param, paramSize, stdin);
+	    		int id = atoi(param);
+	    		printf("Send - Please enter your message\n");
+	    		fgets(msg, msgSize, stdin);
+	    		Send(id,msg);
+
+
+
+	    		Send(0,NULL);
 
 	    	} else if (cmd[0] == 'r' || cmd[0] == 'R') {
 	    		printf("Command: Receive\n");
@@ -89,6 +101,7 @@ void inputCommands(void) {
 
         memset(cmd,'\0', cmdSize);
         memset(param,'\0', paramSize);
+        memset(msg,'\0', msgSize);
 	}
 }
 
@@ -98,6 +111,7 @@ int main(void) {
 	readyQHIGH = ListCreate();
 	readyQMED = ListCreate();
 	readyQLOW = ListCreate();
+	blockedList = ListCreate();
 
 	PCB runningProc = {idCount++,0,1,NULL};
 	initProc = runningProc;

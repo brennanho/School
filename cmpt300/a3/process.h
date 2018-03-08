@@ -51,7 +51,7 @@ void SemaphoreP(int semID);
 //You can assume semaphores IDs numbered 0 - 4
 void SemaphoreV(int semID);
 
-//Dump complete state information of process to screen (this includes process status and anything else)
+//Dump complete state information of process to screen (this includes process status etc)
 void ProcessInfo(int pid);
 
 //Display all process queues and their contents
