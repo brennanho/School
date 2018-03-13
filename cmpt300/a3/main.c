@@ -138,6 +138,8 @@ int main(void) {
 	initProc = malloc(sizeof* initProc);
 	initProc->id = idCount++;
 	initProc->priority = 0;
+	initProc->semID = 0;
+	initProc->semVal = 0;
 	initProc->burstTime = (rand() % 10) + 1;
 	initProc->running = 1;
 	initProc->msg = NULL;

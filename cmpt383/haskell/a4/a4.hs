@@ -125,5 +125,28 @@ toList (x:xs) = Cons x (toList xs)
 --Q14
 toHaskellList :: List a -> [a]
 toHaskellList Empty = []
--- toHaskellList (Cons a Empty) = [a]
--- toHaskellList (Cons a (Cons a Empty)) = toHaskellList [a]
+toHaskellList (Cons first Empty) = [first]
+toHaskellList (Cons first rest) = first:(toHaskellList rest)
+
+--Q15
+append :: List a -> List a -> List a
+append a b = toList (myappend (toHaskellList a) (toHaskellList b))
+
+--Q16 HELPER FUNCTION - Inverted filter 
+filterNot :: (a -> Bool) -> [a] -> [a]
+filterNot pred a = filter (not . pred) a
+
+--Q16
+removeAll :: (a -> Bool) -> List a -> List a
+removeAll f a = toList (filterNot f (toHaskellList a))
+
+--Q17 HELPER FUNCTION - Quicksort for normal Haskell lists
+sortHaskell :: Ord a => [a] -> [a]
+sortHaskell [] = []
+sortHaskell [a] = [a]
+sortHaskell (x:xs) = myappend (sortHaskell [i | i <- xs, i < x]) (myappend [x] (sortHaskell [i | i <- xs, i >= x]))
+
+--Q17 - Quicksort
+sort :: Ord a => List a -> List a
+sort a = toList (sortHaskell (toHaskellList a))
+

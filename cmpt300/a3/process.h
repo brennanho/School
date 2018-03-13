@@ -2,6 +2,7 @@ typedef struct PCB {
 	
 	int id;
 	int semID;
+	int semVal;
 	int priority;
 	int running;
 	int burstTime;
