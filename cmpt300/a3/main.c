@@ -11,8 +11,10 @@ LIST* readyQMED;
 LIST* readyQLOW;
 LIST* blockedList;
 LIST* messageList;
+LIST* semaphores;
 PCB* runningProc;
 PCB* initProc;
+int semCount = 0;
 int idCount = 0;
 int quantum = 5;
 
@@ -78,13 +80,27 @@ void inputCommands(void) {
 	    		printf("Command: Reply\n");
 
 	    	} else if (cmd[0] == 'n' || cmd[0] == 'N') {
-	    		printf("Command: New Semaphore\n");
+	    		if (semCount >= 5)
+	    			printf("\nCannot create anymore Semaphores on system\n");
+	    		else {
+	    			printf("New Semaphore (ID: %d) - Please give an initial semaphore value\n", semCount);
+	    			fgets(param, paramSize, stdin);
+	    			int initVal = atoi(param);
+	    			NewSemaphore(semCount++, initVal);
+	    		}
+
 
 	    	} else if (cmd[0] == 'p' || cmd[0] == 'P') {
-	    		printf("Command: Semaphore P\n");
+	    		printf("Semaphore P: Please enter a semaphore ID (0 - 4)\n");
+	    		fgets(param, paramSize, stdin);
+	    		int semID = atoi(param);
+	    		SemaphoreP(semID);
 
 	    	} else if (cmd[0] == 'v' || cmd[0] == 'V') {
-	    		printf("Command: Semaphore V\n");
+	    		printf("Semaphore V: Please enter a semaphore ID (0 - 4)\n");
+	    		fgets(param, paramSize, stdin);
+	    		int semID = atoi(param);
+	    		SemaphoreV(semID);
 
 	    	} else if (cmd[0] == 'i' || cmd[0] == 'I') {
 	    		printf("\nProcess Info - Please enter the ID of the process to retrieve info\n");
@@ -116,19 +132,17 @@ int main(void) {
 	readyQLOW = ListCreate();
 	blockedList = ListCreate();
 	messageList = ListCreate();
+	semaphores = ListCreate();
 	
 	//Initial process that will be the last to terminate at the end of the simulation
 	initProc = malloc(sizeof* initProc);
-	initProc->id = 0;
+	initProc->id = idCount++;
 	initProc->priority = 0;
+	initProc->burstTime = (rand() % 10) + 1;
 	initProc->running = 1;
+	initProc->msg = NULL;
 
-	//Currently running process, initially will be the same as initProc
-	runningProc = malloc(sizeof* runningProc);
-	runningProc->id = idCount++;
-	runningProc->priority = 0;
-	runningProc->running = 1;
-	runningProc->burstTime = (rand() % 10) + 1;
+	runningProc = initProc;
 
 	inputCommands();
 

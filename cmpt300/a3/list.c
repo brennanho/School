@@ -87,6 +87,14 @@ int comparator2(void* item, void* comparisonArg) {
 	return 0;
 }
 
+int comparator3(void* item, void* comparisonArg) {
+	PCB* myItem = (PCB*)item;
+	int id = myItem->semID;
+	if (id == *(int*)comparisonArg)
+		return 1;
+	return 0;
+}
+
 //Returns used nodes to node stack pool 
 void itemFree(void* itemToBeFreed) {
 	if (nodesStack->size == 0) {

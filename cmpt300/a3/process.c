@@ -8,6 +8,7 @@ extern LIST* readyQMED;
 extern LIST* readyQLOW;
 extern LIST* blockedList;
 extern LIST* messageList;
+extern LIST* semaphores;
 extern PCB* runningProc;
 extern PCB* initProc;
 extern int idCount;
@@ -69,11 +70,14 @@ PCB* getProcessFromSys(int pid) {
 	return NULL;
 }
 
+//Blocks the running process and returns the new blocked process
 PCB* becomeBlocked() {
 	PCB* blockedProc = malloc(sizeof* blockedProc);
 	blockedProc->id = runningProc->id;
 	blockedProc->msg = runningProc->msg;
 	blockedProc->priority = runningProc->priority;
+	blockedProc->burstTime = runningProc->burstTime;
+	blockedProc->semID = runningProc->semID;
 	ListPrepend(blockedList,blockedProc);
 	return blockedProc;
 }
@@ -89,6 +93,7 @@ PCB* getNextProcess() {
 		return initProc;
 }
 
+//MAY NOT NEED ANYMORE?
 void aquireCPU(PCB* nextProc) {
 	runningProc->id = nextProc->id;
 	runningProc->msg = nextProc->msg;
@@ -134,10 +139,8 @@ void Create(int priority) {
 
 void Fork(void) {
 	if (runningProc->id != initProc->id) {
-		PCB* proc = malloc(sizeof *proc);
+		PCB* proc = copyProc(runningProc);
 		proc->id = idCount++;
-		proc->priority = runningProc->priority;
-		proc->msg = runningProc->msg;
 		addToReadyQ(proc);
 		printf("Success: new process id is %d",proc->id);
 
@@ -149,7 +152,7 @@ void Fork(void) {
 void Kill(int pid) {
 	if (pid == 0 && ListCount(readyQLOW) == 0 && ListCount(readyQMED) == 0 && ListCount(readyQHIGH) == 0) 
 		printf("Killing 'init' process\n");
-	else if (runningProc->id = pid) {
+	else if (runningProc->id == pid) {
 		Exit();
 	}
 	else {
@@ -165,27 +168,18 @@ void Kill(int pid) {
 }
 
 void Exit(void) {
-	PCB* nextProc = getNextProcess();
-	printf("New process (ID: %d) is now running\n", nextProc->id);
-	if (nextProc->id == 0) {
-		aquireCPU(nextProc);
-	} else {
-		aquireCPU(nextProc);
-		free(nextProc);
-	}
+	free(runningProc);
+	runningProc = getNextProcess();
+	printf("New process (ID: %d) is now running\n", runningProc->id);
 }
 
 void Quantum(void) {
-	if (runningProc == NULL)
-		return;
-	else {
-		runningProc->burstTime = runningProc->burstTime - quantum;
-		if (runningProc->burstTime <= 0) {
-			Exit();
-		} else {
-			addToReadyQ(copyProc(runningProc));
-			Exit();
-		}
+	runningProc->burstTime = runningProc->burstTime - quantum;
+	if (runningProc->burstTime <= 0) {
+		Exit();
+	} else {
+		addToReadyQ(copyProc(runningProc));
+		Exit();
 	}
 }
 
@@ -198,11 +192,7 @@ void Send(int pid, char* msg) {
 	newMsg->msg = msg;
 	ListPrepend(messageList, newMsg);
 
-	PCB* nextProc = getNextProcess();
-	if (nextProc == NULL)
-		return;
-
-	aquireCPU(nextProc);
+	runningProc = getNextProcess();
 
 }
 
@@ -223,10 +213,7 @@ void Receive(void) {
 	}
 
 	free(blockedID);
-	PCB* nextProc = getNextProcess();
-	if (nextProc == NULL)
-		return;
-	aquireCPU(nextProc);
+	runningProc = getNextProcess();
 
 }
 
@@ -236,28 +223,54 @@ void Reply(int pid, char* msg) {
 }
 
 void NewSemaphore(int semID, int initVal) {
-
+	Semaphore* newSem = malloc(sizeof *newSem);
+	newSem->id = semID;
+	newSem->val = initVal;
+	ListPrepend(semaphores,newSem);
 }
 
 
 void SemaphoreP(int semID) {
-
+	int* ID = malloc(sizeof *ID);
+	*ID = semID;
+	Semaphore* sem = ListSearch(semaphores, comparator, ID);
+	if (sem == NULL) {
+		printf("\nNo semaphore found with ID %d\n",semID);
+	} else {
+		sem->val--;
+		if (sem->val < 0) {
+			becomeBlocked();
+			runningProc = getNextProcess();
+		}
+	}
 }
 
 
 void SemaphoreV(int semID) {
-
+	int* ID = malloc(sizeof *ID);
+	*ID = semID;
+	Semaphore* sem = ListSearch(semaphores, comparator, ID);
+	if (sem == NULL) {
+		printf("\nNo semaphore found with ID %d\n",semID);
+	} else {
+		sem->val++;
+		if (sem->val >= 0) {
+			if (ListSearch(blockedList, comparator3, ID) != NULL) {
+				addToReadyQ(ListRemove(blockedList));
+			}
+			else 
+				printf("\nNo processes were unblocked\n");
+		}
+	}
+	free(ID);
 }
 
 void ProcessInfo(int pid) {
 	PCB* proc = getProcessFromSys(pid);
 	if (proc == NULL) {
 		printf("\nNo process with ID: %d\n",pid);
-		return;
-	}
-
-	printf("{ID: %d, Priority: %d, Time Remaining: %d, Message: %s}\n",proc->id, proc->priority, proc->burstTime, proc->msg);
-
+	} else
+		printf("{ID: %d, Priority: %d, Time Remaining: %d, Message: %s}\n",proc->id, proc->priority, proc->burstTime, proc->msg);
 }
 
 void TotalInfo(void) {

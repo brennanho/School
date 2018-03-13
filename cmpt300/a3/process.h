@@ -1,6 +1,7 @@
 typedef struct PCB {
 	
 	int id;
+	int semID;
 	int priority;
 	int running;
 	int burstTime;
