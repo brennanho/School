@@ -26,47 +26,31 @@ void addToReadyQ(PCB* proc) {
 }
 
 PCB* killProcessFromQ(int pid) {
-	int* pidArg = malloc(sizeof* pidArg);
-	*pidArg = pid;
 
-	if (ListSearch(readyQHIGH,comparator,pidArg) != NULL) {
-		free(pidArg);
+	if (ListSearch(readyQHIGH,comparator,&pid) != NULL) {
 		return ListRemove(readyQHIGH);
-	} else if (ListSearch(readyQMED,comparator,pidArg) != NULL) {
-		free(pidArg);
+	} else if (ListSearch(readyQMED,comparator,&pid) != NULL) {
 		return ListRemove(readyQMED);
-	} else if (ListSearch(readyQLOW,comparator,pidArg) != NULL){
-		free(pidArg);
+	} else if (ListSearch(readyQLOW,comparator,&pid) != NULL){
 		return ListRemove(readyQLOW);
 	}
-
-	free(pidArg);
 	return NULL;
 }
 
 PCB* getProcessFromSys(int pid) {
 	PCB* process;
-	int* pidArg = malloc(sizeof* pidArg);
-	*pidArg = pid;
-
 	if (runningProc->id == pid) {
-		free(pidArg);
 		return runningProc;
-	} else if ((process = ListSearch(readyQHIGH,comparator,pidArg)) != NULL) {
-		free(pidArg);
+	} else if ((process = ListSearch(readyQHIGH,comparator,&pid)) != NULL) {
 		return process;
-	} else if ((process = ListSearch(readyQMED,comparator,pidArg)) != NULL) {
-		free(pidArg);
+	} else if ((process = ListSearch(readyQMED,comparator,&pid)) != NULL) {
 		return process;
-	} else if ((process = ListSearch(readyQLOW,comparator,pidArg)) != NULL){
-		free(pidArg);
+	} else if ((process = ListSearch(readyQLOW,comparator,&pid)) != NULL){
 		return process;
-	} else if ((process = ListSearch(blockedList,comparator,pidArg)) != NULL) {
-		free(pidArg);
+	} else if ((process = ListSearch(blockedList,comparator,&pid)) != NULL) {
 		return process;
 	}
 
-	free(pidArg);
 	return NULL;
 }
 
@@ -106,6 +90,19 @@ void printQ(LIST* Q) {
 	}
 }
 
+void printMessageList(LIST* messageList) {
+	if (ListCount(messageList) == 0) {
+		printf("No messages in message list\n");
+		return;
+	}
+	ListLast(messageList);
+	while (messageList->curr != NULL) {
+		Message* msg = ListCurr(messageList);
+		printf("{msg: %s, fromID: %d, toID: %d}\n",msg->msg, msg->fromID, msg->toID);
+		ListPrev(messageList);
+	}
+}
+
 
 //END OF HELPER FUNCTIONS
 
@@ -120,7 +117,7 @@ void Create(int priority) {
 }
 
 void Fork(void) {
-	if (runningProc->id != initProc->id) {
+	if (runningProc->id != 0) {
 		PCB* proc = copyProc(runningProc);
 		proc->id = idCount++;
 		addToReadyQ(proc);
@@ -150,9 +147,17 @@ void Kill(int pid) {
 }
 
 void Exit(void) {
-	free(runningProc);
-	runningProc = getNextProcess();
-	printf("New process (ID: %d) is now running\n", runningProc->id);
+	if (runningProc->id != 0) {
+		free(runningProc);
+		runningProc = getNextProcess();
+		printf("\nNew process (ID: %d) is now running\n", runningProc->id);
+	} else if (ListCount(readyQLOW) == 0 && ListCount(readyQMED) == 0 && ListCount(readyQHIGH) == 0) {
+		printf("\nEnd of simulation\n");
+		exit(0);
+	} else {
+		addToReadyQ(runningProc);
+		runningProc = getNextProcess();
+	}
 }
 
 void Quantum(void) {
@@ -168,37 +173,43 @@ void Quantum(void) {
 
 
 void Send(int pid, char* msg) {
-	PCB* blockedProc = copyProc(runningProc);
 	Message* newMsg = malloc(sizeof* newMsg);
-	newMsg->fromID = blockedProc->id;
+	newMsg->fromID = runningProc->id;
 	newMsg->toID = pid;
 	newMsg->msg = msg;
-	ListPrepend(messageList, newMsg);
-	ListPrepend(blockedList, blockedProc);
 
+	//Do not block the running process if it is the init process
+	if (runningProc->id != 0) {
+		PCB* blockedProc = copyProc(runningProc);
+		ListPrepend(blockedList, blockedProc);
+	} else {
+		addToReadyQ(runningProc);
+	}
+
+	ListPrepend(messageList, newMsg);
 	runningProc = getNextProcess();
 
 }
 
 
 void Receive(void) {
-	PCB* blockedProc = copyProc(runningProc);
-	int* blockedID = malloc(sizeof *blockedID);
-	*blockedID = blockedProc->id;
-	Message* msg = ListSearch(messageList,comparator2,blockedID);
+	Message* msg = ListSearch(messageList,comparator2,&runningProc->id);
 
-	if (msg == NULL)
-		printf("No messages for process (ID: %d)\n",*blockedID);
-	else {
-		ListRemove(messageList);
+	if (msg == NULL) {
+		
+		if (runningProc->id == 0)
+			return;
+
+		PCB* blockedProc = copyProc(runningProc);
+		ListPrepend(blockedList, blockedProc);
+		printf("No messages for process (ID: %d)\n",blockedProc->id);
+		runningProc = getNextProcess();
+	} else {
 		printf("Message from (ID: %d) sent to (ID: %d)\n", msg->fromID, msg->toID);
 		printf("Message: %s\n", msg->msg);
-		blockedProc->msg = msg->msg;
+		runningProc->msg = msg->msg;
+		ListRemove(messageList);
 	}
-
-	free(blockedID);
-	ListPrepend(blockedList, blockedProc);
-	runningProc = getNextProcess();
 
 }
 
@@ -279,5 +290,7 @@ void TotalInfo(void) {
 	printQ(readyQLOW);
 	printf("\nBlocked Processes:\n");
 	printQ(blockedList);
+	printf("\nMessage List:\n");
+	printMessageList(messageList);
 	printf("\n");
 }
