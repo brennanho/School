@@ -120,7 +120,7 @@ void inputCommands(void) {
 
         memset(cmd,'\0', cmdSize);
         memset(param,'\0', paramSize);
-        memset(msg,'\0', msgSize);
+        //memset(msg,'\0', msgSize);
 	}
 }
 
@@ -142,7 +142,6 @@ int main(void) {
 	initProc->semVal = 0;
 	initProc->burstTime = (rand() % 10) + 1;
 	initProc->running = 1;
-	initProc->msg = NULL;
 
 	runningProc = initProc;
 

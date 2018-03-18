@@ -6,7 +6,7 @@ typedef struct PCB {
 	int priority;
 	int running;
 	int burstTime;
-	char* msg;
+	char msg[40];
 
 } PCB;
 
@@ -14,7 +14,7 @@ typedef struct Message {
 
 	int fromID;
 	int toID;
-	char* msg;
+	char msg[40];
 
 } Message;
 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "list.h"
 #include "process.h"
 
@@ -67,7 +68,7 @@ PCB* getNextProcess() {
 
 PCB* copyProc(PCB* proc) {
 	PCB* copyProc = malloc(sizeof* copyProc);
-	copyProc->msg = proc->msg;
+	strcpy(copyProc->msg, proc->msg);
 	copyProc->semID = proc->semID;
 	copyProc->id = proc->id;
 	copyProc->semVal = proc->semVal;
@@ -111,7 +112,6 @@ void Create(int priority) {
 	proc->id = idCount++;
 	proc->priority = priority;
 	proc->burstTime = (rand() % 10) + 1; //Arbitrary
-	proc->msg = NULL;
 	addToReadyQ(proc);
 
 }
@@ -176,7 +176,7 @@ void Send(int pid, char* msg) {
 	Message* newMsg = malloc(sizeof* newMsg);
 	newMsg->fromID = runningProc->id;
 	newMsg->toID = pid;
-	newMsg->msg = msg;
+	strcpy(newMsg->msg, msg);
 
 	//Do not block the running process if it is the init process
 	if (runningProc->id != 0) {
@@ -191,9 +191,8 @@ void Send(int pid, char* msg) {
 
 }
 
-
 void Receive(void) {
-	Message* msg = ListSearch(messageList,comparator2,&runningProc->id);
+	Message* msg = ListSearch(messageList,comparator2,&(runningProc->id));
 
 	if (msg == NULL) {
 		
@@ -204,10 +203,11 @@ void Receive(void) {
 		ListPrepend(blockedList, blockedProc);
 		printf("No messages for process (ID: %d)\n",blockedProc->id);
 		runningProc = getNextProcess();
+
 	} else {
 		printf("Message from (ID: %d) sent to (ID: %d)\n", msg->fromID, msg->toID);
 		printf("Message: %s\n", msg->msg);
-		runningProc->msg = msg->msg;
+		strcpy(runningProc->msg, msg->msg);
 		ListRemove(messageList);
 	}
 
