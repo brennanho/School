@@ -1,7 +1,6 @@
 #include<stdio.h>
 #include <stdlib.h>
 #include "list.h"
-#include "process.h"
 
 /*Nodes and Heads Description:
 	In this program, nodes and list heads are statically allocated in two arrays.
@@ -72,25 +71,7 @@ void AddToEmptyList(LIST* list, void* item) {
 
 //comparator routine used for ListSearch (must be typecasted, used int for the case of this assignment)
 int comparator(void* item, void* comparisonArg) {
-	PCB* myItem = (PCB*)item;
-	int id = myItem->id;
-	if (id == *(int*)comparisonArg)
-		return 1;
-	return 0;
-}
-
-int comparator2(void* item, void* comparisonArg) {
-	Message* myItem = (Message*)comparisonArg;
-	int id = myItem->toID;
-	if (*(int*)item == id)
-		return 1;
-	return 0;
-}
-
-int comparator3(void* item, void* comparisonArg) {
-	PCB* myItem = (PCB*)comparisonArg;
-	int id = myItem->semID;
-	if (id == *(int*)item)
+	if (*(int*)item == *(int*)comparisonArg)
 		return 1;
 	return 0;
 }
@@ -392,7 +373,7 @@ void ListConcat(LIST* list1,LIST* list2) {
 }
 
 void *ListSearch(LIST* list, int (*comparator)(void*,void*),void* comparisonArg) {
-	Node* curr = list->first;
+	Node* curr = list->curr;
 	while (curr != NULL) {
 		if (comparator(comparisonArg,curr->item) == 1)
 		{

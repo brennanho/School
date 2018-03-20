@@ -18,15 +18,18 @@ extern int quantum;
 //HELPER FUNCTIONS
 
 void addToReadyQ(PCB* proc) {
-	if (proc->priority == 0)
+	if (proc->id == 0) //'init' process does not get added to a ready queue, it is always available to run
+		return;
+	else if (proc->priority == 0)
 		ListPrepend(readyQHIGH,proc);
 	else if (proc->priority == 1)
 		ListPrepend(readyQMED, proc);
-	else //priority == 2
+	else {
 		ListPrepend(readyQLOW, proc);
+	}
 }
 
-PCB* killProcessFromQ(int pid) {
+PCB* killProcessFromSys(int pid) {
 
 	if (ListSearch(readyQHIGH,comparator,&pid) != NULL) {
 		return ListRemove(readyQHIGH);
@@ -34,8 +37,10 @@ PCB* killProcessFromQ(int pid) {
 		return ListRemove(readyQMED);
 	} else if (ListSearch(readyQLOW,comparator,&pid) != NULL){
 		return ListRemove(readyQLOW);
-	}
-	return NULL;
+	} else if ((ListSearch(blockedList, comparator, &pid)) != NULL)
+		return ListRemove(blockedList);
+	else 
+		return NULL;
 }
 
 PCB* getProcessFromSys(int pid) {
@@ -56,14 +61,26 @@ PCB* getProcessFromSys(int pid) {
 }
 
 PCB* getNextProcess() {
-	if (ListCount(readyQHIGH) != 0)
-		return ListTrim(readyQHIGH);
+	PCB* nextProc;
+	if (ListCount(readyQHIGH) != 0) 
+		nextProc = ListTrim(readyQHIGH);
 	else if (ListCount(readyQMED) != 0)
-		return ListTrim(readyQMED);
+		nextProc = ListTrim(readyQMED);
 	else if (ListCount(readyQLOW) != 0)
-		return ListTrim(readyQLOW);
+		nextProc = ListTrim(readyQLOW);
 	else 
-		return initProc;
+		nextProc = initProc;
+	
+	printf("\nNew running process (ID: %d)\n",nextProc->id);
+	return nextProc;
+}
+
+//Print out message automatically if proc was blocked on "receiving"
+void printReceivedMsg(PCB* proc) {
+	if (proc->msg[0] != '\0') {
+		printf("\nMessage Received: %s", proc->msg);
+		memset(proc->msg, '\0', 40);
+	} 
 }
 
 PCB* copyProc(PCB* proc) {
@@ -86,7 +103,7 @@ void printQ(LIST* Q) {
 	ListFirst(Q);
 	PCB* currProc = ListLast(Q);
 	while (currProc != NULL) {
-		printf("{ID: %d, Time Remaining: %d, Message: %s, SemID: %d, SemVal: %d}\n",currProc->id, currProc->burstTime, currProc->msg, currProc->semID, currProc->semVal);
+		printf("{ID: %d, Time Remaining: %d, SemID: %d, SemVal: %d}\n",currProc->id, currProc->burstTime, currProc->semID, currProc->semVal);
 		currProc = ListPrev(Q);
 	}
 }
@@ -99,7 +116,7 @@ void printMessageList(LIST* messageList) {
 	ListLast(messageList);
 	while (messageList->curr != NULL) {
 		Message* msg = ListCurr(messageList);
-		printf("{msg: %s, fromID: %d, toID: %d}\n",msg->msg, msg->fromID, msg->toID);
+		printf("fromID: %d, toID: %d msg: %s", msg->fromID, msg->toID, msg->msg);
 		ListPrev(messageList);
 	}
 }
@@ -111,6 +128,7 @@ void Create(int priority) {
 	PCB* proc = malloc(sizeof *proc);
 	proc->id = idCount++;
 	proc->priority = priority;
+	proc->semID = -1; //No associated semaphore when created
 	proc->burstTime = (rand() % 10) + 1; //Arbitrary
 	addToReadyQ(proc);
 
@@ -129,13 +147,14 @@ void Fork(void) {
 }
 
 void Kill(int pid) {
-	if (pid == 0 && ListCount(readyQLOW) == 0 && ListCount(readyQMED) == 0 && ListCount(readyQHIGH) == 0) 
-		printf("Killing 'init' process\n");
-	else if (runningProc->id == pid) {
+	if (pid == 0 && ListCount(readyQLOW) == 0 && ListCount(readyQMED) == 0 && ListCount(readyQHIGH) == 0) { 
+		printf("Killing 'init' process, ending simulation\n");
+		free(initProc);
+		exit(0);
+	} else if (runningProc->id == pid) {
 		Exit();
-	}
-	else {
-		PCB* proc = killProcessFromQ(pid);
+	} else {
+		PCB* proc = killProcessFromSys(pid);
 		if (proc == NULL)
 			printf("Process (ID: %d) not found in system\n",pid);
 		else {
@@ -151,12 +170,14 @@ void Exit(void) {
 		free(runningProc);
 		runningProc = getNextProcess();
 		printf("\nNew process (ID: %d) is now running\n", runningProc->id);
+		printReceivedMsg(runningProc);
 	} else if (ListCount(readyQLOW) == 0 && ListCount(readyQMED) == 0 && ListCount(readyQHIGH) == 0) {
 		printf("\nEnd of simulation\n");
 		exit(0);
 	} else {
 		addToReadyQ(runningProc);
 		runningProc = getNextProcess();
+		printReceivedMsg(runningProc);
 	}
 }
 
@@ -186,35 +207,50 @@ void Send(int pid, char* msg) {
 		addToReadyQ(runningProc);
 	}
 
+	//Unblock any "receiving" process
+	PCB* toUnblock;
+	if ((toUnblock = ListSearch(blockedList, comparator, &pid)) != NULL) {
+		strcpy(toUnblock->msg, msg);
+		addToReadyQ(ListRemove(blockedList));
+	}
+
 	ListPrepend(messageList, newMsg);
 	runningProc = getNextProcess();
+	printReceivedMsg(runningProc);
 
 }
 
 void Receive(void) {
-	Message* msg = ListSearch(messageList,comparator2,&(runningProc->id));
 
-	if (msg == NULL) {
-		
-		if (runningProc->id == 0)
-			return;
+	Message* msg = ListSearch(messageList, comparator2, &runningProc->id);
 
-		PCB* blockedProc = copyProc(runningProc);
-		ListPrepend(blockedList, blockedProc);
-		printf("No messages for process (ID: %d)\n",blockedProc->id);
+	if (msg == NULL) { 
+		if (runningProc->id != 0) {
+			PCB* blockedProc = copyProc(runningProc);
+			ListPrepend(blockedList, blockedProc);
+		} 
+		printf("No messages for process (ID: %d)\n",runningProc->id);
 		runningProc = getNextProcess();
-
+		printReceivedMsg(runningProc);
 	} else {
 		printf("Message from (ID: %d) sent to (ID: %d)\n", msg->fromID, msg->toID);
-		printf("Message: %s\n", msg->msg);
-		strcpy(runningProc->msg, msg->msg);
-		ListRemove(messageList);
+		printf("Message: %s", msg->msg);
+		free(ListRemove(messageList));
 	}
 
 }
 
 
 void Reply(int pid, char* msg) {
+
+	//Unblock any "sending" process and reply to it with msg
+	PCB* toUnblock;
+	if (ListSearch(blockedList, comparator, &pid) != NULL) {
+		toUnblock = ListRemove(blockedList);
+		addToReadyQ(toUnblock);
+		strcpy(toUnblock->msg, msg);
+	}
+
 
 }
 
@@ -231,43 +267,51 @@ void SemaphoreP(int semID) {
 		printf("Invalid semaphore ID\n");
 		return;
 	}
-	int* ID = malloc(sizeof *ID);
-	*ID = semID;
-	Semaphore* sem = ListSearch(semaphores, comparator, ID);
+
+	Semaphore* sem = ListSearch(semaphores, comparator, &semID);
 	if (sem == NULL) {
 		printf("\nNo semaphore found with ID %d\n",semID);
 	} else {
+
+		if (runningProc->semID == -1)
+			runningProc->semID = semID;
+
 		sem->val--;
 		runningProc->semVal = sem->val;
 		if (sem->val < 0) {
 			PCB* blockedProc = copyProc(runningProc);
 			ListPrepend(blockedList, blockedProc);
 			runningProc = getNextProcess();
+			printReceivedMsg(runningProc);
 		}
 	}
 }
-
+	
 
 void SemaphoreV(int semID) {
 	if (semID < 0 || semID > 4) {
 		printf("Invalid semaphore ID\n");
 		return;
 	}
-	int* ID = malloc(sizeof *ID);
-	*ID = semID;
-	Semaphore* sem = ListSearch(semaphores, comparator, ID);
+
+	Semaphore* sem = ListSearch(semaphores, comparator, &semID);
 	if (sem == NULL) {
 		printf("\nNo semaphore found with ID %d\n",semID);
 	} else {
+
+		if (runningProc->semID == -1)
+			runningProc->semID = semID;
+
+		PCB* toUnblock;
 		sem->val++;
 		if (sem->val >= 0) {
-			while (ListSearch(blockedList, comparator3, ID) != NULL) {
-				printf("Found process\n");
+			while ((toUnblock = ListSearch(blockedList, comparator3, &semID)) != NULL) {
+				printf("Unblocking process (ID: %d)\n", toUnblock->id);
+				toUnblock->semVal = sem->val;
 				addToReadyQ(ListRemove(blockedList));
 			}
 		}
 	}
-	free(ID);
 }
 
 void ProcessInfo(int pid) {
@@ -275,7 +319,7 @@ void ProcessInfo(int pid) {
 	if (proc == NULL) {
 		printf("\nNo process with ID: %d\n",pid);
 	} else
-		printf("{ID: %d, Priority: %d, Time Remaining: %d, Message: %s, semID: %d, semVal: %d}\n",proc->id, proc->priority, proc->burstTime, proc->msg, proc->semID, proc->semVal);
+		printf("{ID: %d, Priority: %d, Time Remaining: %d, semID: %d, semVal: %d}\n",proc->id, proc->priority, proc->burstTime, proc->semID, proc->semVal);
 }
 
 void TotalInfo(void) {

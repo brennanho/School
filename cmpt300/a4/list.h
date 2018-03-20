@@ -1,5 +1,5 @@
-#define headsArrSize 10
-#define nodesArrSize 1000
+#define headsArrSize 200
+#define nodesArrSize 2000
 
 //Node container with a type "data" item
 typedef struct Node {
@@ -68,15 +68,11 @@ void ListConcat(LIST* list1,LIST* list2);
 
 //delete list. itemFree is a pointer to a routine that frees an item. 
 //It should be invoked (within ListFree) as: (*itemFree)(itemToBeFreed);
+void itemFree(void* itemToBeFreed);
 void ListFree(LIST* list,void (*itemFree)(void* itemToBeFreed));
 
 //Return last item and take it out of list. Make the new last item the current one.
 void *ListTrim(LIST* list);
-
-//Used for ListSearch
-int comparator(void* item, void* comparisonArg);
-int comparator2(void* item, void* comparisonArg);
-int comparator3(void* item, void* comparisonArg);
 
 /*searches list starting at the current item until the end is reached or a match is
 found. In this context, a match is determined by the comparator parameter. This

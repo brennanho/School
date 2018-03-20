@@ -73,11 +73,16 @@ void inputCommands(void) {
 	    		Send(id,msg);
 
 	    	} else if (cmd[0] == 'r' || cmd[0] == 'R') {
-	    		printf("Receive: currenty process will block\n");
+	    		printf("Receive: current process will block (unless 'init' process)\n");
 	    		Receive();
 
 	    	} else if (cmd[0] == 'y' || cmd[0] == 'Y') {
-	    		printf("Command: Reply\n");
+	    		printf("Reply - Please enter the ID of the process to reply (non-blocking)\n");
+	    		fgets(param, paramSize, stdin);
+	    		int id = atoi(param);
+	    		printf("Reply - Please enter your message\n");
+	    		fgets(msg, msgSize, stdin);
+	    		Reply(id,msg);
 
 	    	} else if (cmd[0] == 'n' || cmd[0] == 'N') {
 	    		if (semCount >= 5)
@@ -120,13 +125,13 @@ void inputCommands(void) {
 
         memset(cmd,'\0', cmdSize);
         memset(param,'\0', paramSize);
-        //memset(msg,'\0', msgSize);
+        memset(msg,'\0', msgSize);
 	}
 }
 
 int main(void) {
 
-	srand(time(0)); //To randomly generate arbitray burst times (1 - 10 units)
+	srand(time(0)); //To randomly generate arbitrary burst times (1 - 10 units)
 	readyQHIGH = ListCreate();
 	readyQMED = ListCreate();
 	readyQLOW = ListCreate();
@@ -137,17 +142,18 @@ int main(void) {
 	//Initial process that will be the last to terminate at the end of the simulation
 	initProc = malloc(sizeof* initProc);
 	initProc->id = idCount++;
-	initProc->priority = 0;
-	initProc->semID = 0;
+	initProc->priority = 2;
+	initProc->semID = -1;
 	initProc->semVal = 0;
 	initProc->burstTime = (rand() % 10) + 1;
 	initProc->running = 1;
 
 	runningProc = initProc;
 
+	printf("\n-----------A3 OS SIMULATION----------\n");
+
 	inputCommands();
 
-	free(runningProc);
 	free(initProc);
 	
 	return 0;
