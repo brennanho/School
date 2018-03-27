@@ -48,7 +48,8 @@ int printls(struct dirent* de, char* param, char* fullPath) {
         printf( (itemStats->st_mode & S_IWOTH) ? "w" : "-");
         printf( (itemStats->st_mode & S_IXOTH) ? "x" : "-");
 
-        printf("%d %s %s %011d %s %s", itemStats->st_nlink, owner->pw_name, group->gr_name, itemStats->st_size, date, fullPath);
+        char* formatPath = fullPath + 2;
+        printf("%d %s %s %011d %s %s", itemStats->st_nlink, owner->pw_name, group->gr_name, itemStats->st_size, date, formatPath);
 
         if (is_link(fullPath)) {
             readlink(fullPath, linkPath, 255);
