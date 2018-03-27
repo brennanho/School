@@ -7,22 +7,31 @@
 #include <string.h>
 #include <stdlib.h>
 #include "list.h"
+#include <time.h>
 
 //Helper for printing files when they are found as command line arguments
 int is_file(char* path) {
     struct stat buf;
-    stat(path, &buf);
+    lstat(path, &buf);
     return S_ISREG(buf.st_mode);
+}
+
+//Helper for determining if a path is a symbolic link (soft link)
+int is_link(char* path) {
+    struct stat buf;
+    lstat(path, &buf);
+    return S_ISLNK(buf.st_mode);
 }
 
 //Unix print what ls returns with different parameters
 int printls(struct dirent* de, char* param, char* fullPath) {
 	if (strchr(param, 'l') != NULL) {
         struct stat* itemStats = calloc(4, sizeof *itemStats);
-        stat(fullPath, itemStats);
+        lstat(fullPath, itemStats);
         struct passwd* owner = getpwuid(itemStats->st_uid);
         struct group* group = getgrgid(itemStats->st_gid);
         char date[20];
+        char linkPath[255];
         strftime(date, 20, "%b %d %Y %H:%M", localtime(&(itemStats->st_ctime)));
 
         if (strchr(param, 'i') != NULL)
@@ -39,7 +48,14 @@ int printls(struct dirent* de, char* param, char* fullPath) {
         printf( (itemStats->st_mode & S_IWOTH) ? "w" : "-");
         printf( (itemStats->st_mode & S_IXOTH) ? "x" : "-");
 
-        printf("%d %s %s %011d %s %s\n", itemStats->st_nlink, owner->pw_name, group->gr_name, itemStats->st_size, date, de->d_name);
+        printf("%d %s %s %011d %s %s", itemStats->st_nlink, owner->pw_name, group->gr_name, itemStats->st_size, date, fullPath);
+
+        if (is_link(fullPath)) {
+            readlink(fullPath, linkPath, 255);
+            printf("-> %s\n",linkPath);
+        } else
+            printf("\n");
+
         free(itemStats);
     }
     else if (strchr(param, 'i') != NULL)
@@ -58,6 +74,9 @@ int ls(char* dir, char* param) {
     if (is_file(dir) != 0) {
         printf("\n%s\n",dir);
         return 0;
+    }else if (is_link(dir) != 0 && strchr(param, 'l') != NULL) {
+        printls(de, param, dir);
+        return 0;
     } else if (dr == NULL) { // opendir returns NULL if couldn't open directory 
         printf("UnixLs: cannot access '%s': No such file or directory\n", dir);
         return -1;
@@ -73,7 +92,7 @@ int ls(char* dir, char* param) {
         	strcat(subDirName, "/");
         	strcat(subDirName, de->d_name);
             printls(de, param, subDirName);
-        	if (opendir(subDirName) != NULL && strchr(param,'R') != NULL)
+        	if (opendir(subDirName) != NULL && strchr(param,'R') != NULL  && !is_link(subDirName))
         		ListPrepend(subDirs, subDirName);
         	else
         		free(subDirName);
