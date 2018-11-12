@@ -1,0 +1,5 @@
+SQLite version 3.25.1 2018-09-18 20:20:44
+Enter ".help" for usage hints.
+Connected to a transient in-memory database.
+Use ".open FILENAME" to reopen on a persistent database.
+sqlite> sqlite> 

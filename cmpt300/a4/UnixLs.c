@@ -35,7 +35,7 @@ int printls(struct dirent* de, char* param, char* fullPath) {
         strftime(date, 20, "%b %d %Y %H:%M", localtime(&(itemStats->st_ctime)));
 
         if (strchr(param, 'i') != NULL)
-            printf("%lld ",de->d_ino);
+            printf("%019lld ",de->d_ino);
 
         printf( (S_ISDIR(itemStats->st_mode)) ? "d" : "-");
         printf( (itemStats->st_mode & S_IRUSR) ? "r" : "-");
@@ -48,8 +48,8 @@ int printls(struct dirent* de, char* param, char* fullPath) {
         printf( (itemStats->st_mode & S_IWOTH) ? "w" : "-");
         printf( (itemStats->st_mode & S_IXOTH) ? "x" : "-");
 
-        char* formatPath = fullPath + 2;
-        printf("%d %s %s %011d %s %s", itemStats->st_nlink, owner->pw_name, group->gr_name, itemStats->st_size, date, formatPath);
+        char* formatPath = fullPath + 2; //Do not print the ./ to match the ls command format
+        printf(" %d %s %s %011d %s %s", itemStats->st_nlink, owner->pw_name, group->gr_name, itemStats->st_size, date, formatPath);
 
         if (is_link(fullPath)) {
             readlink(fullPath, linkPath, 255);

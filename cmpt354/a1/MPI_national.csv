@@ -1,0 +1,32 @@
+ISO,Country,MPI Urban,Headcount Ratio Urban,Intensity of Deprivation Urban,MPI Rural,Headcount Ratio Rural,Intensity of Deprivation Rural
+MNG,Mongolia,0.01,2.8,36.4,0.093,22.24,42
+SYR,Syrian Arab Republic,0.011,3,35.5,0.023,6.02,38.5
+PER,Peru,0.011,2.9,38.6,0.113,27.13,41.6
+VNM,Viet Nam,0.013,3.6,36.9,0.036,8.79,41.4
+ZAF,South Africa,0.014,3.6,37.4,0.068,17.17,39.7
+NIC,Nicaragua,0.015,3.8,40,0.15,32.81,45.8
+BRA,Brazil,0.016,4.1,38.3,0.054,11.96,45.1
+TTO,Trinidad and Tobago,0.018,5.4,33.6,0.02,5.66,35.4
+BTN,Bhutan,0.019,4.7,39.5,0.159,35.98,44.2
+BOL,"Bolivia, Plurinational State of",0.019,4.9,39.4,0.191,42.98,44.4
+TJK,Tajikistan,0.02,5.5,36.3,0.065,15.63,41.3
+SWZ,Swaziland,0.02,5.2,39.4,0.083,19.84,41.7
+HND,Honduras,0.022,5.2,41.6,0.119,25.67,46.5
+IRQ,Iraq,0.028,7.7,36,0.083,20.48,40.6
+KHM,Cambodia,0.028,7.1,39.4,0.169,38.06,44.5
+DOM,Dominican Republic,0.029,7.9,37.2,0.048,11.69,41
+NPL,Nepal,0.031,7,43.8,0.147,33.13,44.2
+LAO,Lao People's Democratic Republic,0.032,7.4,43.4,0.223,43.32,51.4
+ZWE,Zimbabwe,0.034,8.7,39.3,0.202,46.27,43.7
+PHL,Philippines,0.035,8.1,42.7,0.068,13.67,49.9
+VUT,Vanuatu,0.039,9.8,39.3,0.155,36.13,43
+IDN,Indonesia,0.039,10.2,38.7,0.093,20.69,45
+MMR,Myanmar,0.04,9.6,41.7,0.168,37.46,44.8
+LSO,Lesotho,0.044,11,39.8,0.179,40.43,44.3
+GAB,Gabon,0.044,10.9,40.7,0.209,46.55,44.8
+GTM,Guatemala,0.048,10.7,44.5,0.161,35.05,45.9
+IND,India,0.064,14.8,43.3,0.25,53.49,46.7
+STP,Sao Tome and Principe,0.067,15.9,42.3,0.11,26.18,42.1
+GHA,Ghana,0.075,17.6,42.7,0.235,49.42,47.5
+KEN,Kenya,0.076,17.3,43.6,0.245,51.44,47.5
+YEM,Yemen,0.08,19,42.1,0.304,57.72,52.7
