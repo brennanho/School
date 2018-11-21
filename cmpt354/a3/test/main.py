@@ -22,6 +22,7 @@ fieldnames2 = ("ISO country code", "Country", "Sub-national region", "World regi
 next(csvfile2)
 reader2 = csv.DictReader( csvfile2, fieldnames2)
 for row in reader2:
+	
 	try:
 		d[row['ISO country code']]['subnational'].append(row)
 	except:
