@@ -6,13 +6,15 @@ let bullets = [];
 let enemy_bullets = [];
 let gl;
 let color;
-let timer = null;
 const NUM_ENEMIES_ROW = 4;
+const RANDOM = 0.99;
+const ENEMY_SPEED_ACC = 1.001;
+const ALIEN_SHOOT_TIME = 1000;
 
 //Cannon and Enemy Object 
 function Square(x, y, speed, is_cannon) {
     this.speed = speed;
-    this.fall_speed = 0.0005;
+    this.fall_speed = 0.001;
     this.is_cannon = is_cannon;
     this.square_size = 0.15;
     this.square = [
@@ -40,7 +42,7 @@ function Square(x, y, speed, is_cannon) {
         }
         for (let i = 0; i < this.square.length; i++) {
             this.square[i][0] += speed;
-            if (!this.is_cannon) {
+            if (this.is_cannon == false) {
                 this.square[i][1] -= this.fall_speed;
                 if (this.square[i][1] <= -1)
                     game_over("You lose ):");
@@ -79,15 +81,6 @@ function Square(x, y, speed, is_cannon) {
 }
 
 function compute_enemies(enemies) {
-    // for (let i = 0; i < enemies.length; i++) {
-    //     for (let j = 0; j < enemies.length; j++) {
-    //         if (enemies[i].collide(enemies[j]) && i != j) {
-    //             enemies[i].speed = -enemies[i].speed;
-    //             enemies[j].speed = -enemies[j].speed;
-    //         }
-    //     }
-    //     enemies[i].move(enemies[i].speed);
-    // }
     for (let i = 0; i < enemies.length; i++) {
         enemies[i].move(enemies[i].speed, enemies);
     }
@@ -113,9 +106,35 @@ function check_cannon_hits(enemies, bullet) {
     }
 }
 
+//For part (e), left and right movement becomes faster and faster
+function increase_enemy_speed(enemies) {
+    for (let i = 0; i < enemies.length; i++) {
+        enemies[i].speed *= ENEMY_SPEED_ACC;
+    }
+}
+
+//For part (a), aliens move left and right uniformly randomly
+function change_direction(enemies) {
+    if (Math.random() >= RANDOM) {
+        for (let i = 0; i < enemies.length; i++) {
+            enemies[i].speed = -enemies[i].speed;
+        }
+    }
+}
+
+function remove_bullets(bullets) {
+    for (let i = 0; i < bullets.length; i += 1) {
+        if (bullets[i][1][1] <= -1 - cannon.square_size/2) {
+            bullets.splice(i, 1);
+        }
+    }
+}
+
 //Player's cannon move
 window.onkeydown = function check_key(e) {
     e = e || window.event;
+
+    //For part (b)
     //LEFT KEY
     if (e.keyCode == '37') {
        cannon.move(-cannon.speed)
@@ -128,9 +147,16 @@ window.onkeydown = function check_key(e) {
     if (e.keyCode == '82') {
         location.reload();
     }
+
+    //Quit game
+    if (e.keyCode == '81') {
+        window.alert("Confirm to quit...");
+        window.alert = () => false;
+        close();
+    }
 }
 
-//Enemy shoots
+//Enemy shoots (part (c))
 function enemy_shoot() {
     if (bot_enemies.length != 0) {
         for (let i = 0; i < bot_enemies.length; i++) {
@@ -141,13 +167,14 @@ function enemy_shoot() {
             enemy_bullets.push(top_enemies[i].shoot());
         }
     }
-    setTimeout(enemy_shoot, 2000);
+    setTimeout(enemy_shoot, ALIEN_SHOOT_TIME);
 }
 
 //Cannon shoot
 window.onmousedown = function click(event) {
     if (event.button == '0') {
-        bullets.push(cannon.shoot());
+        if (bullets.length < 3)
+            bullets.push(cannon.shoot());
     }
 } 
 
@@ -198,6 +225,10 @@ function render() {
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
     //Compute enemy rows
+    increase_enemy_speed(top_enemies);
+    increase_enemy_speed(bot_enemies);
+    change_direction(top_enemies);
+    change_direction(bot_enemies);
     compute_enemies(top_enemies);
     compute_enemies(bot_enemies);
 
@@ -205,11 +236,19 @@ function render() {
     render_enemies(top_enemies);
     render_enemies(bot_enemies);
 
+    remove_bullets(enemy_bullets);
+
     //Render Player's bullets
     gl.uniform4f(color, 0, 1, 0, 1);
     for (let i = 0; i < bullets.length; i++) {
+        if (bullets[i] == undefined)
+            continue;
         for (let j = 0; j < bullets[i].length; j++) {
-            bullets[i][j][1] += 0.01;
+            bullets[i][j][1] += 0.02;
+            if (bullets[i][j][1] >= 1 + cannon.square_size/2) {
+                bullets.splice(i, 1);
+                break;
+            }
         }
         check_cannon_hits(bot_enemies, bullets[i]);
         check_cannon_hits(top_enemies, bullets[i]);
