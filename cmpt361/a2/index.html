@@ -4,7 +4,7 @@
 	<title>Bunny</title>
 </head>
 <body>
-	<canvas id="canvas" width="700" height="700" style="background-color: black">
+	<canvas id="canvas" width="512" height="512" style="background-color: black">
 		Browser does not support webgl?
 	</canvas>
 
@@ -14,7 +14,8 @@
 		varying vec4 fColor;
 		uniform vec4 ambientProduct, diffuseProduct, specularProduct;
 		uniform mat4 modelViewMatrix;
-		uniform mat4 modelViewMatrix_L;
+		uniform mat4 modelViewMatrixL;
+		uniform mat4 modelViewMatrixCube;
 
 		uniform mat4 projectionMatrix;
 		uniform float shininess;
@@ -29,7 +30,7 @@
 
 		    mat4 lightMat = mat4(1.0);
 
-		    lightPosition =  modelViewMatrix  * modelViewMatrix_L *  lightPosition;
+		    lightPosition =  modelViewMatrix  * modelViewMatrixL *  lightPosition;
 		    vec3 pos = -(modelViewMatrix * vPosition).xyz;
 
 		    //fixed light postion
@@ -43,7 +44,7 @@
 		    vec4 NN = vec4(vNormal,0);
 		    // Transform vertex normal into eye coordinates
 
-		    vec3 N = normalize( (modelViewMatrix  * modelViewMatrix_L * NN).xyz);
+		    vec3 N = normalize( (modelViewMatrix  * modelViewMatrixL * NN).xyz);
 
 
 		    // Compute terms in the illumination equation

@@ -600,7 +600,7 @@ function render() {
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
 
 
-     eye = vec3(eyex, eyey, eyez);
+    eye = vec3(eyex, eyey, eyez);
 
 
     if (light_rot == 1) {
@@ -616,11 +616,6 @@ function render() {
             j2+=0.1;
         }
         i2++;
-
-
-
-
-
     }
 
     eye = vec3(5, 5, 0);
@@ -640,12 +635,12 @@ function render() {
     //this cannot change, everthing is in the same perspective
    
 
-    gl.uniform1f(gl.getUniformLocation(program,
-        "shininess"), materialShininess);
+    // gl.uniform1f(gl.getUniformLocation(program,
+    //     "shininess"), materialShininess);
 
-    is_light = 1;
-    gl.uniform1i(gl.getUniformLocation(program,
-        "is_light"), is_light);
+    // is_light = 1;
+    // gl.uniform1i(gl.getUniformLocation(program,
+    //     "is_light"), is_light);
 
     modelViewMatrix = lookAt(eye, at, up);
 
@@ -653,7 +648,6 @@ function render() {
 
     modelViewMatrix = mult(modelViewMatrix, translate(5, 5, 0));
 
-    //modelViewMatrix = mult(modelViewMatrix, translate(5, 5, 0));
 
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
     gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuffer);
@@ -729,12 +723,12 @@ function render() {
     modelViewMatrix = lookAt(eye, at, up);
 
 
-    var lp1_temp = 5.0;
-    var lp2_temp = 0.0;
+    // var lp1_temp = 5.0;
+    // var lp2_temp = 0.0;
 
-    var  rot_angle_rad = (Math.PI * rot_angle) / 180;
-    lp1_new = (lp1_temp * Math.cos(rot_angle_rad)) - (lp2_temp * Math.sin(rot_angle_rad));
-    lp2_new = (lp1_temp * Math.sin(rot_angle_rad)) + (lp2_temp * Math.cos(rot_angle_rad));
+    // var  rot_angle_rad = (Math.PI * rot_angle) / 180;
+    // lp1_new = (lp1_temp * Math.cos(rot_angle_rad)) - (lp2_temp * Math.sin(rot_angle_rad));
+    // lp2_new = (lp1_temp * Math.sin(rot_angle_rad)) + (lp2_temp * Math.cos(rot_angle_rad));
     
 
    // lightPosition = mult(vec4(5.0, 0.0, 0.0, 0.0), modelViewMatrix) ;
