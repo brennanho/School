@@ -10,73 +10,41 @@
 
 	<!-- Shaders -->
 	<script id="vertex-shader" type="x-shader/x-vertex">
-		attribute  vec3 vNormal;
-		varying vec4 fColor;
-		uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+		attribute vec3 vertNormal;
+		varying vec3 fragNormal;
+
 		uniform mat4 modelViewMatrix;
-		uniform mat4 modelViewMatrixL;
 		uniform mat4 modelViewMatrixCube;
 
+		attribute vec2 vertTexCoord;
+		varying vec2 fragTexCoord;
+
+
 		uniform mat4 projectionMatrix;
-		uniform float shininess;
-		uniform int is_light;
 		attribute vec4 vPosition;
 		void main()
 		{
-		    vec4 lightPosition;
-		    lightPosition = vec4(0.0, 0.0, 0.0, 1.0);
-
-		    float limit =  0.5236;
-
-		    mat4 lightMat = mat4(1.0);
-
-		    lightPosition =  modelViewMatrix  * modelViewMatrixL *  lightPosition;
-		    vec3 pos = -(modelViewMatrix * vPosition).xyz;
-
-		    //fixed light postion
-
-		    vec3 light = lightPosition.xyz;
-		    vec3 L = normalize( light - pos );
-
-		    vec3 E = normalize( -pos );
-		    vec3 H = normalize( L + E );
-
-		    vec4 NN = vec4(vNormal,0);
-		    // Transform vertex normal into eye coordinates
-
-		    vec3 N = normalize( (modelViewMatrix  * modelViewMatrixL * NN).xyz);
-
-
-		    // Compute terms in the illumination equation
-		    vec4 ambient = ambientProduct;
-
-		    float Kd = max( dot(L, N), 0.0 );
-		    vec4  diffuse = Kd*diffuseProduct;
-
-		    float Ks = pow( max(dot(N, H), 0.0), shininess );
-		    vec4  specular = Ks * specularProduct;
-
-		    if( dot(L, N) < 0.0  ) {
-		    	specular = vec4(0.0, 0.0, 0.0, 1.0);
-		    }
-
+		    fragTexCoord = vertTexCoord;
+		    fragNormal = (modelViewMatrix * vec4(vertNormal, 0.0)).xyz;
 		    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-
-		    if(is_light==1)	{
-		    	fColor = vec4(1.0, 1.0, 1.0, 1.0);
-		    }
-		    else {
-		    	fColor = ambient + diffuse + specular;
-		    	fColor.a = 1.0;
-		    }
 		 }
 	</script>
 	<script id="fragment-shader" type="x-shader/x-fragment">
 		precision mediump float;
-		uniform vec4 fColor;
+		varying vec3 fragNormal;
+		varying vec2 fragTexCoord;
+		uniform vec3 sunlightDir;
+		uniform vec3 conelightDir;
+
 		void main()
 		{
-		    gl_FragColor = fColor;
+		    vec3 ambientLightInt = vec3(0.1,0.1,0.1);
+		    vec3 sunlightInt = vec3(0.7, 0.6, 0.3);
+
+		    vec3 color = vec3(1.0, 1.0, 1.0);
+		    vec3 lightInt = ambientLightInt + conelightDir + sunlightInt * max(dot(fragNormal, sunlightDir), 1.0);
+
+		    gl_FragColor = vec4(color * lightInt, 1.0);
 		}
 	</script>
 

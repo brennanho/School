@@ -624,7 +624,6 @@ function render() {
     modelViewMatrix_L = mult(modelViewMatrix_L, translate(5, -5, 0));
     gl.uniformMatrix4fv(modelViewMatrix_LLoc, false, flatten(modelViewMatrix_L));
     
-    
 
     eye = vec3(eyex, eyey, eyez);
 
