@@ -22,7 +22,6 @@ function robotArm() {
     this.UPPER_ARM_WIDTH = 0.5;
     this.LOWER_ARM_WIDTH = 0.75;
     this.points = [];
-    this.colors = [];
     this.verts = [
         vec4( -0.5, -0.5,  0.5, 1.0 ),
         vec4( -0.5,  0.5,  0.5, 1.0 ),
@@ -33,31 +32,15 @@ function robotArm() {
         vec4(  0.5,  0.5, -0.5, 1.0 ),
         vec4(  0.5, -0.5, -0.5, 1.0 )
     ];
-    this.vertColors = [ //Different shades of red depending on side
-        vec4( 1.0, 0.0, 0.1, 1.0 ),  
-        vec4( 0.9, 0.0, 0.1, 1.0 ),  
-        vec4( 0.8, 0.0, 0.1, 1.0 ),  
-        vec4( 0.7, 0.0, 0.1, 1.0 ),  
-        vec4( 0.6, 0.0, 0.1, 1.0 ),  
-        vec4( 0.5, 0.0, 0.1, 1.0 ),  
-        vec4( 0.4, 0.0, 0.1, 1.0 ),  
-        vec4( 0.3, 0.0, 0.1, 1.0 )   
-    ];
     this.quad = function(a, b, c, d) {
-        this.colors.push(this.vertColors[a]);
         this.points.push(this.verts[a]);
-        this.colors.push(this.vertColors[a]);
         this.points.push(this.verts[b]);
-        this.colors.push(this.vertColors[a]);
         this.points.push(this.verts[c]);
-        this.colors.push(this.vertColors[a]);
         this.points.push(this.verts[a]);
-        this.colors.push(this.vertColors[a]);
         this.points.push(this.verts[c]);
-        this.colors.push(this.vertColors[a]);
         this.points.push(this.verts[d]);
     }
-    this.colorCube = function() {
+    this.colorCube = function() { //Shape of cube
         this.quad( 1, 0, 3, 2 );
         this.quad( 2, 3, 7, 6 );
         this.quad( 3, 0, 4, 7 );
@@ -172,7 +155,7 @@ window.onload = function init() {
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray(vPosition);
 
-    let vColor = gl.getAttribLocation( program, "vColor");
+    let vColor = gl.getAttribLocation(program, "vColor");
     gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vColor);
 
