@@ -1,3 +1,11 @@
+let canvas, gl, color, program, myRobot, mySphere;
+let mouseX, mouseY, mouseX2, mouseY2;
+let modelViewMatrix, projectionMatrix;
+let theta= [0, 0, 0];
+let angle = 0;
+let modelViewMatrixLoc;
+let vBuffer, sBuffer, cBuffer;
+
 scale4 = function(a, b, c) {
     let result = mat4();
     result[0][0] = a;
@@ -85,6 +93,8 @@ function sphere() {
     this.r = 1.0;
     this.size = 1.0;
     this.bands = 500;
+    this.xOffset = -10;
+    this.yOffset = 8;
     this.init = function() {
         for (let latNumber = 0; latNumber <= this.bands; ++latNumber) {
           let theta = latNumber * Math.PI / this.bands;
@@ -106,24 +116,39 @@ function sphere() {
     }
     this.draw = function(modelViewMatrix, modelViewMatrixLoc) {
         let s = scale4(this.size, this.size, this.size);
-        let instanceMatrix = mult(translate( 3, 3, 0.0 ), s);
-        let t = mult(modelViewMatrix, instanceMatrix);
+        let instanceMatrix;
+        if (mouseX2 && mouseY2) {
+        	instanceMatrix = mult(translate(mouseX2/25 + this.xOffset, -mouseY2/25 + this.yOffset, 0.0), s);
+        }
+        else {
+        	instanceMatrix = mult(translate(5, 3, 0), s);
+        	mouseX2 = undefined;
+        	mouseY2 = undefined;
+        }
+        let t = mult(mat4(), instanceMatrix);
         gl.uniformMatrix4fv(modelViewMatrixLoc,  false, flatten(t));
         gl.bufferData(gl.ARRAY_BUFFER, flatten(this.verts), gl.STATIC_DRAW);
         gl.drawArrays(gl.LINES, 0, this.verts.length);
     }
 }
 
-let canvas, gl, color, program, myRobot, mySphere;
-let modelViewMatrix, projectionMatrix;
-let theta= [0, 0, 0];
-let angle = 0;
-let modelViewMatrixLoc;
-let vBuffer, sBuffer, cBuffer;
+function mousePos(e) {
+	mouseX = e.clientX;
+	mouseY = e.clientY;
+}
+function click(e) {
+	mouseX2 = mouseX;
+	mouseY2 = mouseY;
+	mySphere.draw(modelViewMatrix, modelViewMatrixLoc);
+}
 
 window.onload = function init() {
 
     canvas = document.getElementById("canvas");
+    canvas.onmousemove = mousePos;
+    canvas.onclick = click;
+    mouseX2 = undefined;
+    mouseY2 = undefined;
 
     gl = WebGLUtils.setupWebGL(canvas);
     if ( !gl ) { alert( "WebGL isn't supported" ); }
@@ -143,13 +168,13 @@ window.onload = function init() {
     vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
 
-    let vColor = gl.getAttribLocation( program, "vColor");
-    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor);
-
     let vPosition = gl.getAttribLocation(program, "vPosition");
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray(vPosition);
+
+    let vColor = gl.getAttribLocation( program, "vColor");
+    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vColor);
 
     document.getElementById("slider1").onchange = function(event) {
         theta[0] = event.target.value;
@@ -163,7 +188,6 @@ window.onload = function init() {
 
 
     modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
-
     projectionMatrix = ortho(-10, 10, -10, 10, -10, 10);
     gl.uniformMatrix4fv(gl.getUniformLocation(program, "projectionMatrix"),  false, flatten(projectionMatrix));
 
@@ -171,13 +195,13 @@ window.onload = function init() {
 }
 
 
-
+let i = 0;
 
 let render = function() {
 
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 
-     modelViewMatrix = rotate(theta[0], 0, 1, 0 );
+    modelViewMatrix = rotate(theta[0], 0, 1, 0 );
     
      //Robot arm base
     myRobot.base(modelViewMatrix, modelViewMatrixLoc);
@@ -193,7 +217,7 @@ let render = function() {
     myRobot.upperArm(modelViewMatrix, modelViewMatrixLoc);
 
     // Ball
-    mySphere.draw(modelViewMatrix, modelViewMatrixLoc);
+    //mySphere.draw(modelViewMatrix, modelViewMatrixLoc);
 
     requestAnimFrame(render);
 }
